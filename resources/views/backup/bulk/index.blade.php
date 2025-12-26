@@ -77,7 +77,7 @@
             </div>
 
             <div style="padding: 1rem; border-top: 1px solid var(--card-border);">
-                <div class="d-flex gap-1 bulk-actions">
+                <div class="d-flex gap-1">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-check-lg"></i> Submit All
                     </button>
@@ -228,67 +228,6 @@
             text-align: center;
             color: var(--text-muted);
         }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .bulk-actions {
-                flex-direction: column !important;
-            }
-
-            .bulk-actions .btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .entry-row {
-                flex-direction: column;
-                gap: 0.75rem;
-            }
-
-            .entry-content {
-                flex-direction: column;
-                width: 100%;
-                gap: 0.75rem;
-            }
-
-            .employee-select {
-                min-width: 100%;
-            }
-
-            .meal-checkboxes {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .meal-checkbox {
-                flex: 1;
-                justify-content: center;
-                font-size: 0.85rem;
-                padding: 0.4rem 0.5rem;
-            }
-
-            .row .col-4 {
-                flex: 0 0 100%;
-                max-width: 100%;
-            }
-
-            .row .col-12 .row {
-                flex-direction: column;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .meal-checkbox {
-                padding: 0.35rem 0.4rem;
-                font-size: 0.75rem;
-            }
-
-            .entry-number {
-                width: 32px;
-                height: 32px;
-                font-size: 0.8rem;
-            }
-        }
     </style>
 @endpush
 
@@ -306,50 +245,50 @@
             entryCount++;
             const container = document.getElementById('entries-container');
             const entryHtml = `
-                                                    <div class="entry-row" id="entry-${entryCount}">
-                                                        <div class="entry-number">${entryCount}</div>
-                                                        <div class="entry-content">
-                                                            <div class="employee-select">
-                                                                <div class="employee-search-container">
-                                                                    <input type="text" class="form-control employee-search" 
-                                                                        placeholder="Search employee..." 
-                                                                        onkeyup="searchEmployee(this, ${entryCount})"
-                                                                        onfocus="showSuggestions(${entryCount})"
-                                                                        data-entry="${entryCount}">
-                                                                    <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
-                                                                    <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
-                                                                </div>
-                                                                <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
-                                                                    <span id="selected-name-${entryCount}"></span>
-                                                                    <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
-                                                                        <i class="bi bi-x"></i>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                            <div class="meal-checkboxes">
-                                                                <label class="meal-checkbox">
-                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast">
-                                                                    <span>🌅 B'fast</span>
-                                                                </label>
-                                                                <label class="meal-checkbox">
-                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch">
-                                                                    <span>☀️ Lunch</span>
-                                                                </label>
-                                                                <label class="meal-checkbox">
-                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner">
-                                                                    <span>🌙 Dinner</span>
-                                                                </label>
-                                                                <label class="meal-checkbox">
-                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper">
-                                                                    <span>🌃 Supper</span>
-                                                                </label>
-                                                            </div>
+                                            <div class="entry-row" id="entry-${entryCount}">
+                                                <div class="entry-number">${entryCount}</div>
+                                                <div class="entry-content">
+                                                    <div class="employee-select">
+                                                        <div class="employee-search-container">
+                                                            <input type="text" class="form-control employee-search" 
+                                                                placeholder="Search employee..." 
+                                                                onkeyup="searchEmployee(this, ${entryCount})"
+                                                                onfocus="showSuggestions(${entryCount})"
+                                                                data-entry="${entryCount}">
+                                                            <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
+                                                            <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
                                                         </div>
-                                                        <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
+                                                        <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
+                                                            <span id="selected-name-${entryCount}"></span>
+                                                            <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
+                                                                <i class="bi bi-x"></i>
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                `;
+                                                    <div class="meal-checkboxes">
+                                                        <label class="meal-checkbox">
+                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast">
+                                                            <span>🌅 B'fast</span>
+                                                        </label>
+                                                        <label class="meal-checkbox">
+                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch">
+                                                            <span>☀️ Lunch</span>
+                                                        </label>
+                                                        <label class="meal-checkbox">
+                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner">
+                                                            <span>🌙 Dinner</span>
+                                                        </label>
+                                                        <label class="meal-checkbox">
+                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper">
+                                                            <span>🌃 Supper</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        `;
             container.insertAdjacentHTML('beforeend', entryHtml);
             updateNoEntriesMessage();
         }
@@ -376,11 +315,11 @@
             if (entries.length === 0) {
                 if (!noEntriesEl) {
                     container.innerHTML = `
-                                                            <div class="no-entries">
-                                                                <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                                                <p>No entries yet. Click "Add Entry" to start.</p>
-                                                            </div>
-                                                        `;
+                                                    <div class="no-entries">
+                                                        <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                                        <p>No entries yet. Click "Add Entry" to start.</p>
+                                                    </div>
+                                                `;
                 }
             } else {
                 if (noEntriesEl) {
@@ -408,11 +347,11 @@
                 suggestionsEl.innerHTML = '<div class="employee-suggestion">No employees found</div>';
             } else {
                 suggestionsEl.innerHTML = filtered.map(emp => `
-                                                        <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
-                                                            <strong>${emp.employee_number}</strong> - ${emp.name}
-                                                            <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
-                                                        </div>
-                                                    `).join('');
+                                                <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
+                                                    <strong>${emp.employee_number}</strong> - ${emp.name}
+                                                    <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
+                                                </div>
+                                            `).join('');
             }
 
             suggestionsEl.style.display = 'block';
