@@ -16,7 +16,6 @@ class Attendance extends Model
         'recorded_by',
         'scanned_at',
         'location',
-        'absence_proof',
         'edited_by',
         'deleted_by',
         'edited_at',

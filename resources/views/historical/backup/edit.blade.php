@@ -11,8 +11,7 @@
             <h2 class="card-title">Edit Record</h2>
         </div>
 
-        <form action="{{ route('historical.update', $attendance->id) }}" method="POST" style="padding: 2rem;"
-            enctype="multipart/form-data">
+        <form action="{{ route('historical.update', $attendance->id) }}" method="POST" style="padding: 2rem;">
             @csrf
             @method('PUT')
 
@@ -74,40 +73,6 @@
                 <input type="text" name="recorded_by" id="recorded_by" class="form-control"
                     value="{{ old('recorded_by', $attendance->recorded_by) }}"
                     placeholder="Leave empty for QR scan records">
-            </div>
-
-            <!-- Absence Proof Section -->
-            <div class="form-group"
-                style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--card-border);">
-                <label class="form-label">📎 Absence Proof</label>
-
-                @if($attendance->absence_proof)
-                    <div
-                        style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(0, 255, 136, 0.1); border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
-                        <span style="color: var(--success);">Current file:</span>
-                        <a href="{{ Storage::url($attendance->absence_proof) }}" target="_blank" class="btn btn-primary btn-sm">
-                            <i class="bi bi-file-earmark-image"></i> View
-                        </a>
-                        <span
-                            style="color: var(--text-muted); font-size: 0.85rem;">{{ basename($attendance->absence_proof) }}</span>
-                    </div>
-                @else
-                    <div style="margin-bottom: 1rem; color: var(--text-muted);">No proof file attached</div>
-                @endif
-
-                <input type="file" name="absence_proof" id="absence_proof" class="form-control"
-                    accept=".jpg,.jpeg,.png,.pdf" style="margin-bottom: 0.5rem;">
-                <small style="color: var(--text-muted);">Upload new file to replace (JPG, PNG, PDF - max 10MB)</small>
-
-                @if($attendance->absence_proof)
-                    <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255, 165, 0, 0.1); border-radius: 8px;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--accent);">
-                            <input type="checkbox" name="apply_to_all" value="1" style="accent-color: var(--primary);">
-                            Apply new proof to ALL attendances with the same file
-                            ({{ \App\Models\Attendance::where('absence_proof', $attendance->absence_proof)->count() }} records)
-                        </label>
-                    </div>
-                @endif
             </div>
 
             @if($attendance->edited_by)

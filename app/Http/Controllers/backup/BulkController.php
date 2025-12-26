@@ -24,8 +24,7 @@ class BulkController extends Controller
             'date' => 'required|date',
             'recorded_by' => 'required|string|max:255',
             'location' => 'nullable|string',
-            'absence_proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:10240', // 10MB max
-            'entries' => 'required|array|min:1|max:200',
+            'entries' => 'required|array|min:1|max:50',
             'entries.*.employee_id' => 'required|exists:employees,id',
             'entries.*.meals' => 'required|array|min:1',
             'entries.*.meals.*' => 'in:breakfast,lunch,dinner,supper,snack',
@@ -33,27 +32,9 @@ class BulkController extends Controller
 
         $date = Carbon::parse($validated['date']);
         $recordedBy = $validated['recorded_by'];
-        $overrideLocation = $validated['location'] ?? null;
+        $overrideLocation = $validated['location'] ?? null; // Global location override for all entries
         $successCount = 0;
         $skippedCount = 0;
-
-        // Handle file upload if present
-        $absenceProofPath = null;
-        if ($request->hasFile('absence_proof')) {
-            $file = $request->file('absence_proof');
-            $extension = $file->getClientOriginalExtension();
-            $baseFilename = $date->format('Y-m-d') . '_' . $overrideLocation;
-            $filename = $baseFilename . '.' . $extension;
-
-            // Check if file exists and add counter suffix if needed
-            $counter = 1;
-            while (\Storage::disk('public')->exists('absence_proofs/' . $filename)) {
-                $filename = $baseFilename . '(' . $counter . ').' . $extension;
-                $counter++;
-            }
-
-            $absenceProofPath = $file->storeAs('absence_proofs', $filename, 'public');
-        }
 
         foreach ($validated['entries'] as $entry) {
             $employee = Employee::find($entry['employee_id']);
@@ -94,7 +75,6 @@ class BulkController extends Controller
                     'recorded_by' => $recordedBy,
                     'scanned_at' => $date->copy()->setTime($hour, 0, 0),
                     'location' => $location,
-                    'absence_proof' => $absenceProofPath,
                 ]);
 
                 $successCount++;
@@ -114,8 +94,7 @@ class BulkController extends Controller
                         'scan_method' => 'manual',
                         'recorded_by' => $recordedBy,
                         'scanned_at' => $date->copy()->setTime(20, 0, 0),
-                        'location' => $location,
-                        'absence_proof' => $absenceProofPath,
+                        'location' => $location, // Same as dinner location
                     ]);
                     $successCount++;
                 }

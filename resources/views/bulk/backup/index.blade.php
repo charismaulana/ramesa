@@ -3,10 +3,10 @@
 @section('content')
     <div class="page-header">
         <h1 class="page-title">BULK ATTENDANCE INPUT</h1>
-        <p class="page-subtitle">Input multiple employee meals at once (max 200 entries)</p>
+        <p class="page-subtitle">Input multiple employee meals at once (max 50 entries)</p>
     </div>
 
-    <form action="{{ route('bulk.store') }}" method="POST" id="bulk-form" enctype="multipart/form-data">
+    <form action="{{ route('bulk.store') }}" method="POST" id="bulk-form">
         @csrf
 
         <div class="card">
@@ -38,26 +38,6 @@
                             <option value="Mangunjaya">Mangunjaya</option>
                             <option value="Keluang">Keluang</option>
                         </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-12">
-                    <div class="form-group">
-                        <label class="form-label" for="absence_proof">
-                            📎 Absence Proof (Image/PDF) - Optional
-                        </label>
-                        <input type="file" name="absence_proof" id="absence_proof" class="form-control"
-                            accept=".jpg,.jpeg,.png,.pdf" onchange="previewFile()">
-                        <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">
-                            Accepted formats: JPG, PNG, PDF (max 10MB)
-                        </small>
-                        <div id="file-preview" style="margin-top: 0.5rem; display: none;">
-                            <span style="color: var(--success);">
-                                ✓ <span id="file-name"></span>
-                            </span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -237,58 +217,58 @@
         let entryCount = 0;
 
         function addEntry() {
-            if (entryCount >= 200) {
-                alert('Maximum 200 entries allowed');
+            if (entryCount >= 50) {
+                alert('Maximum 50 entries allowed');
                 return;
             }
 
             entryCount++;
             const container = document.getElementById('entries-container');
             const entryHtml = `
-                                            <div class="entry-row" id="entry-${entryCount}">
-                                                <div class="entry-number">${entryCount}</div>
-                                                <div class="entry-content">
-                                                    <div class="employee-select">
-                                                        <div class="employee-search-container">
-                                                            <input type="text" class="form-control employee-search" 
-                                                                placeholder="Search employee..." 
-                                                                onkeyup="searchEmployee(this, ${entryCount})"
-                                                                onfocus="showSuggestions(${entryCount})"
-                                                                data-entry="${entryCount}">
-                                                            <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
-                                                            <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
-                                                        </div>
-                                                        <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
-                                                            <span id="selected-name-${entryCount}"></span>
-                                                            <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
-                                                                <i class="bi bi-x"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div class="meal-checkboxes">
-                                                        <label class="meal-checkbox">
-                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast">
-                                                            <span>🌅 B'fast</span>
-                                                        </label>
-                                                        <label class="meal-checkbox">
-                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch">
-                                                            <span>☀️ Lunch</span>
-                                                        </label>
-                                                        <label class="meal-checkbox">
-                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner">
-                                                            <span>🌙 Dinner</span>
-                                                        </label>
-                                                        <label class="meal-checkbox">
-                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper">
-                                                            <span>🌃 Supper</span>
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
-                                                    <i class="bi bi-trash"></i>
+                                <div class="entry-row" id="entry-${entryCount}">
+                                    <div class="entry-number">${entryCount}</div>
+                                    <div class="entry-content">
+                                        <div class="employee-select">
+                                            <div class="employee-search-container">
+                                                <input type="text" class="form-control employee-search" 
+                                                    placeholder="Search employee..." 
+                                                    onkeyup="searchEmployee(this, ${entryCount})"
+                                                    onfocus="showSuggestions(${entryCount})"
+                                                    data-entry="${entryCount}">
+                                                <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
+                                                <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
+                                            </div>
+                                            <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
+                                                <span id="selected-name-${entryCount}"></span>
+                                                <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
+                                                    <i class="bi bi-x"></i>
                                                 </button>
                                             </div>
-                                        `;
+                                        </div>
+                                        <div class="meal-checkboxes">
+                                            <label class="meal-checkbox">
+                                                <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast">
+                                                <span>🌅 B'fast</span>
+                                            </label>
+                                            <label class="meal-checkbox">
+                                                <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch">
+                                                <span>☀️ Lunch</span>
+                                            </label>
+                                            <label class="meal-checkbox">
+                                                <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner">
+                                                <span>🌙 Dinner</span>
+                                            </label>
+                                            <label class="meal-checkbox">
+                                                <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper">
+                                                <span>🌃 Supper</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            `;
             container.insertAdjacentHTML('beforeend', entryHtml);
             updateNoEntriesMessage();
         }
@@ -315,11 +295,11 @@
             if (entries.length === 0) {
                 if (!noEntriesEl) {
                     container.innerHTML = `
-                                                    <div class="no-entries">
-                                                        <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                                        <p>No entries yet. Click "Add Entry" to start.</p>
-                                                    </div>
-                                                `;
+                                        <div class="no-entries">
+                                            <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                            <p>No entries yet. Click "Add Entry" to start.</p>
+                                        </div>
+                                    `;
                 }
             } else {
                 if (noEntriesEl) {
@@ -347,11 +327,11 @@
                 suggestionsEl.innerHTML = '<div class="employee-suggestion">No employees found</div>';
             } else {
                 suggestionsEl.innerHTML = filtered.map(emp => `
-                                                <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
-                                                    <strong>${emp.employee_number}</strong> - ${emp.name}
-                                                    <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
-                                                </div>
-                                            `).join('');
+                                    <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
+                                        <strong>${emp.employee_number}</strong> - ${emp.name}
+                                        <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
+                                    </div>
+                                `).join('');
             }
 
             suggestionsEl.style.display = 'block';
@@ -437,20 +417,5 @@
                 alert(errorMsg);
             }
         });
-
-        // File preview function
-        function previewFile() {
-            const fileInput = document.getElementById('absence_proof');
-            const preview = document.getElementById('file-preview');
-            const fileName = document.getElementById('file-name');
-
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                fileName.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
-                preview.style.display = 'block';
-            } else {
-                preview.style.display = 'none';
-            }
-        }
     </script>
 @endpush
