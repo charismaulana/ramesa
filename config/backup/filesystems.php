@@ -41,7 +41,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL') . '/storage',
+            'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
@@ -58,16 +58,6 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
             'report' => false,
-        ],
-
-        // Direct public storage - no symlink needed (for shared hosting like Hostinger)
-        // Files stored directly in public_html/storage/
-        'public_direct' => [
-            'driver' => 'local',
-            'root' => base_path('../public_html/storage'),
-            'url' => env('APP_URL') . '/storage',
-            'visibility' => 'public',
-            'throw' => false,
         ],
 
     ],

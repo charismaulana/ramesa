@@ -128,12 +128,12 @@ class HistoricalController extends Controller
 
             // Check if file exists and add counter suffix if needed
             $counter = 1;
-            while (\Storage::disk('public')->exists('absence_proofs/' . $filename)) {
+            while (\Storage::disk('public_direct')->exists('absence_proofs/' . $filename)) {
                 $filename = $baseFilename . '(' . $counter . ').' . $extension;
                 $counter++;
             }
 
-            $newProofPath = $file->storeAs('absence_proofs', $filename, 'public');
+            $newProofPath = $file->storeAs('absence_proofs', $filename, 'public_direct');
             $validated['absence_proof'] = $newProofPath;
 
             // Apply to all attendances with same proof if checkbox checked

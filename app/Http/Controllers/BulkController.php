@@ -47,12 +47,12 @@ class BulkController extends Controller
 
             // Check if file exists and add counter suffix if needed
             $counter = 1;
-            while (\Storage::disk('public')->exists('absence_proofs/' . $filename)) {
+            while (\Storage::disk('public_direct')->exists('absence_proofs/' . $filename)) {
                 $filename = $baseFilename . '(' . $counter . ').' . $extension;
                 $counter++;
             }
 
-            $absenceProofPath = $file->storeAs('absence_proofs', $filename, 'public');
+            $absenceProofPath = $file->storeAs('absence_proofs', $filename, 'public_direct');
         }
 
         foreach ($validated['entries'] as $entry) {
