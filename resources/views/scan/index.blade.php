@@ -22,65 +22,65 @@
                             <div
                                 style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-top: 0.75rem;">
                                 <button type="button" class="meal-btn active" data-meal="breakfast" style="
-                                    padding: 1rem;
-                                    border-radius: 12px;
-                                    border: 2px solid var(--card-border);
-                                    background: var(--card-bg);
-                                    color: var(--text-primary);
-                                    cursor: pointer;
-                                    transition: all 0.3s ease;
-                                    font-family: 'Rajdhani', sans-serif;
-                                    font-size: 0.95rem;
-                                    font-weight: 600;
-                                ">
+                                                    padding: 1rem;
+                                                    border-radius: 12px;
+                                                    border: 2px solid var(--card-border);
+                                                    background: var(--card-bg);
+                                                    color: var(--text-primary);
+                                                    cursor: pointer;
+                                                    transition: all 0.3s ease;
+                                                    font-family: 'Rajdhani', sans-serif;
+                                                    font-size: 0.95rem;
+                                                    font-weight: 600;
+                                                ">
                                     <i class="bi bi-sunrise"
                                         style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: var(--accent);"></i>
                                     Breakfast
                                 </button>
                                 <button type="button" class="meal-btn" data-meal="lunch" style="
-                                    padding: 1rem;
-                                    border-radius: 12px;
-                                    border: 2px solid var(--card-border);
-                                    background: var(--card-bg);
-                                    color: var(--text-primary);
-                                    cursor: pointer;
-                                    transition: all 0.3s ease;
-                                    font-family: 'Rajdhani', sans-serif;
-                                    font-size: 0.95rem;
-                                    font-weight: 600;
-                                ">
+                                                    padding: 1rem;
+                                                    border-radius: 12px;
+                                                    border: 2px solid var(--card-border);
+                                                    background: var(--card-bg);
+                                                    color: var(--text-primary);
+                                                    cursor: pointer;
+                                                    transition: all 0.3s ease;
+                                                    font-family: 'Rajdhani', sans-serif;
+                                                    font-size: 0.95rem;
+                                                    font-weight: 600;
+                                                ">
                                     <i class="bi bi-sun"
                                         style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: var(--secondary);"></i>
                                     Lunch
                                 </button>
                                 <button type="button" class="meal-btn" data-meal="dinner" style="
-                                    padding: 1rem;
-                                    border-radius: 12px;
-                                    border: 2px solid var(--card-border);
-                                    background: var(--card-bg);
-                                    color: var(--text-primary);
-                                    cursor: pointer;
-                                    transition: all 0.3s ease;
-                                    font-family: 'Rajdhani', sans-serif;
-                                    font-size: 0.95rem;
-                                    font-weight: 600;
-                                ">
+                                                    padding: 1rem;
+                                                    border-radius: 12px;
+                                                    border: 2px solid var(--card-border);
+                                                    background: var(--card-bg);
+                                                    color: var(--text-primary);
+                                                    cursor: pointer;
+                                                    transition: all 0.3s ease;
+                                                    font-family: 'Rajdhani', sans-serif;
+                                                    font-size: 0.95rem;
+                                                    font-weight: 600;
+                                                ">
                                     <i class="bi bi-sunset"
                                         style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: var(--primary);"></i>
                                     Dinner
                                 </button>
                                 <button type="button" class="meal-btn" data-meal="supper" style="
-                                    padding: 1rem;
-                                    border-radius: 12px;
-                                    border: 2px solid var(--card-border);
-                                    background: var(--card-bg);
-                                    color: var(--text-primary);
-                                    cursor: pointer;
-                                    transition: all 0.3s ease;
-                                    font-family: 'Rajdhani', sans-serif;
-                                    font-size: 0.95rem;
-                                    font-weight: 600;
-                                ">
+                                                    padding: 1rem;
+                                                    border-radius: 12px;
+                                                    border: 2px solid var(--card-border);
+                                                    background: var(--card-bg);
+                                                    color: var(--text-primary);
+                                                    cursor: pointer;
+                                                    transition: all 0.3s ease;
+                                                    font-family: 'Rajdhani', sans-serif;
+                                                    font-size: 0.95rem;
+                                                    font-weight: 600;
+                                                ">
                                     <i class="bi bi-moon-stars"
                                         style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: var(--primary-light);"></i>
                                     Supper
@@ -94,65 +94,65 @@
                             <div
                                 style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-top: 0.75rem;">
                                 <button type="button" class="location-btn active" data-location="Ramba" style="
-                                    padding: 1rem;
-                                    border-radius: 12px;
-                                    border: 2px solid var(--card-border);
-                                    background: var(--card-bg);
-                                    color: var(--text-primary);
-                                    cursor: pointer;
-                                    transition: all 0.3s ease;
-                                    font-family: 'Rajdhani', sans-serif;
-                                    font-size: 0.95rem;
-                                    font-weight: 600;
-                                ">
+                                                    padding: 1rem;
+                                                    border-radius: 12px;
+                                                    border: 2px solid var(--card-border);
+                                                    background: var(--card-bg);
+                                                    color: var(--text-primary);
+                                                    cursor: pointer;
+                                                    transition: all 0.3s ease;
+                                                    font-family: 'Rajdhani', sans-serif;
+                                                    font-size: 0.95rem;
+                                                    font-weight: 600;
+                                                ">
                                     <i class="bi bi-geo-alt"
                                         style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: var(--primary);"></i>
                                     Ramba
                                 </button>
                                 <button type="button" class="location-btn" data-location="Bentayan" style="
-                                    padding: 1rem;
-                                    border-radius: 12px;
-                                    border: 2px solid var(--card-border);
-                                    background: var(--card-bg);
-                                    color: var(--text-primary);
-                                    cursor: pointer;
-                                    transition: all 0.3s ease;
-                                    font-family: 'Rajdhani', sans-serif;
-                                    font-size: 0.95rem;
-                                    font-weight: 600;
-                                ">
+                                                    padding: 1rem;
+                                                    border-radius: 12px;
+                                                    border: 2px solid var(--card-border);
+                                                    background: var(--card-bg);
+                                                    color: var(--text-primary);
+                                                    cursor: pointer;
+                                                    transition: all 0.3s ease;
+                                                    font-family: 'Rajdhani', sans-serif;
+                                                    font-size: 0.95rem;
+                                                    font-weight: 600;
+                                                ">
                                     <i class="bi bi-geo-alt"
                                         style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: var(--primary);"></i>
                                     Bentayan
                                 </button>
                                 <button type="button" class="location-btn" data-location="Mangunjaya" style="
-                                    padding: 1rem;
-                                    border-radius: 12px;
-                                    border: 2px solid var(--card-border);
-                                    background: var(--card-bg);
-                                    color: var(--text-primary);
-                                    cursor: pointer;
-                                    transition: all 0.3s ease;
-                                    font-family: 'Rajdhani', sans-serif;
-                                    font-size: 0.95rem;
-                                    font-weight: 600;
-                                ">
+                                                    padding: 1rem;
+                                                    border-radius: 12px;
+                                                    border: 2px solid var(--card-border);
+                                                    background: var(--card-bg);
+                                                    color: var(--text-primary);
+                                                    cursor: pointer;
+                                                    transition: all 0.3s ease;
+                                                    font-family: 'Rajdhani', sans-serif;
+                                                    font-size: 0.95rem;
+                                                    font-weight: 600;
+                                                ">
                                     <i class="bi bi-geo-alt"
                                         style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: var(--primary);"></i>
                                     Mangunjaya
                                 </button>
                                 <button type="button" class="location-btn" data-location="Keluang" style="
-                                    padding: 1rem;
-                                    border-radius: 12px;
-                                    border: 2px solid var(--card-border);
-                                    background: var(--card-bg);
-                                    color: var(--text-primary);
-                                    cursor: pointer;
-                                    transition: all 0.3s ease;
-                                    font-family: 'Rajdhani', sans-serif;
-                                    font-size: 0.95rem;
-                                    font-weight: 600;
-                                ">
+                                                    padding: 1rem;
+                                                    border-radius: 12px;
+                                                    border: 2px solid var(--card-border);
+                                                    background: var(--card-bg);
+                                                    color: var(--text-primary);
+                                                    cursor: pointer;
+                                                    transition: all 0.3s ease;
+                                                    font-family: 'Rajdhani', sans-serif;
+                                                    font-size: 0.95rem;
+                                                    font-weight: 600;
+                                                ">
                                     <i class="bi bi-geo-alt"
                                         style="font-size: 1.5rem; display: block; margin-bottom: 0.25rem; color: var(--primary);"></i>
                                     Keluang

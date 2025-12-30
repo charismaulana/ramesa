@@ -11,8 +11,7 @@ class ScanController extends Controller
 {
     public function index()
     {
-        $employees = Employee::where('active_status', 'active')->orderBy('name')->get();
-        return view('scan.index', compact('employees'));
+        return view('scan.index');
     }
 
     public function process(Request $request)

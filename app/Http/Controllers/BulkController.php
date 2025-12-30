@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Attendance;
+use App\Models\EmployeeGroup;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -15,7 +16,9 @@ class BulkController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('bulk.index', compact('employees'));
+        $groups = EmployeeGroup::with('employees:id,name,employee_number,department,employee_status')->get();
+
+        return view('bulk.index', compact('employees', 'groups'));
     }
 
     public function store(Request $request)
