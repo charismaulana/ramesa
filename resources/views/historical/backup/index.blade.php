@@ -134,6 +134,7 @@
                             </a>
                         </th>
                         <th>Recorded By</th>
+                        <th>Proof</th>
                         @if(auth()->user()->canAccessFullFeatures())
                             <th>Actions</th>
                         @endif
@@ -191,6 +192,16 @@
                                     <div style="font-size: 0.75rem; color: var(--accent); margin-top: 0.25rem;">
                                         <i class="bi bi-pencil"></i> Edited by {{ $attendance->edited_by }}
                                     </div>
+                                @endif
+                            </td>
+                            <td>
+                                @if($attendance->absence_proof)
+                                    <a href="{{ Storage::url($attendance->absence_proof) }}" target="_blank"
+                                        class="btn btn-primary btn-sm" title="View Absence Proof">
+                                        <i class="bi bi-file-earmark-image"></i>
+                                    </a>
+                                @else
+                                    <span style="color: var(--text-muted);">-</span>
                                 @endif
                             </td>
                             @if(auth()->user()->canAccessFullFeatures())

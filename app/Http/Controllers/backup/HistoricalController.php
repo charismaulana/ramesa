@@ -110,13 +110,46 @@ class HistoricalController extends Controller
             'scanned_at' => 'required|date',
             'location' => 'required|string',
             'recorded_by' => 'nullable|string|max:255',
+            'absence_proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:10240',
+            'apply_to_all' => 'nullable|boolean',
         ]);
 
         $attendance = Attendance::findOrFail($id);
+        $oldProofPath = $attendance->absence_proof;
+
+        // Handle file upload if present
+        $newProofPath = null;
+        if ($request->hasFile('absence_proof')) {
+            $file = $request->file('absence_proof');
+            $extension = $file->getClientOriginalExtension();
+            $date = \Carbon\Carbon::parse($validated['scanned_at']);
+            $baseFilename = $date->format('Y-m-d') . '_' . $validated['location'];
+            $filename = $baseFilename . '.' . $extension;
+
+            // Check if file exists and add counter suffix if needed
+            $counter = 1;
+            while (\Storage::disk('public_direct')->exists('absence_proofs/' . $filename)) {
+                $filename = $baseFilename . '(' . $counter . ').' . $extension;
+                $counter++;
+            }
+
+            $newProofPath = $file->storeAs('absence_proofs', $filename, 'public_direct');
+            $validated['absence_proof'] = $newProofPath;
+
+            // Apply to all attendances with same proof if checkbox checked
+            if ($request->input('apply_to_all') && $oldProofPath) {
+                Attendance::where('absence_proof', $oldProofPath)
+                    ->where('id', '!=', $id)
+                    ->update(['absence_proof' => $newProofPath]);
+            }
+        }
 
         // Track who edited and when
         $validated['edited_by'] = auth()->user()->name;
         $validated['edited_at'] = now();
+
+        // Remove apply_to_all from validated before updating
+        unset($validated['apply_to_all']);
 
         $attendance->update($validated);
 

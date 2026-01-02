@@ -60,6 +60,8 @@ Route::middleware(['auth', 'role'])->group(function () {
         // Export routes
         Route::get('/historical/export-form', [HistoricalController::class, 'exportForm'])->name('historical.exportForm');
         Route::get('/historical/export', [HistoricalController::class, 'export'])->name('historical.export');
+        Route::get('/historical/recap-export', [HistoricalController::class, 'recapExport'])->name('historical.recap');
+        Route::get('/historical/recap-pdf', [HistoricalController::class, 'recapPDF'])->name('historical.recap-pdf');
 
         // Report routes
         Route::get('/report', [ReportController::class, 'form'])->name('report.form');

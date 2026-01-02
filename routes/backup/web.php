@@ -64,6 +64,12 @@ Route::middleware(['auth', 'role'])->group(function () {
         // Report routes
         Route::get('/report', [ReportController::class, 'form'])->name('report.form');
         Route::get('/report/generate', [ReportController::class, 'generate'])->name('report.generate');
+
+        // Employee Group routes
+        Route::get('/groups', [\App\Http\Controllers\EmployeeGroupController::class, 'index'])->name('groups.index');
+        Route::post('/groups', [\App\Http\Controllers\EmployeeGroupController::class, 'store'])->name('groups.store');
+        Route::put('/groups/{id}', [\App\Http\Controllers\EmployeeGroupController::class, 'update'])->name('groups.update');
+        Route::delete('/groups/{id}', [\App\Http\Controllers\EmployeeGroupController::class, 'destroy'])->name('groups.destroy');
     });
 
     // Super Admin only routes
