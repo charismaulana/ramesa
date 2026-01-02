@@ -208,7 +208,6 @@
                 <!-- Search Groups -->
                 <input type="text" id="searchGroupInput" class="form-control" placeholder="🔍 Search groups..."
                     onkeyup="filterGroups()" style="margin-bottom: 0.5rem;">
-                onkeyup="filterGroups()" style="margin-bottom: 0.5rem;">
 
                 <!-- Groups List - Fixed Height -->
                 <div id="groupsList"
