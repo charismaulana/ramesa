@@ -29,14 +29,7 @@ class EmployeeGroupController extends Controller
         ]);
 
         $group = EmployeeGroup::create(['name' => $validated['name']]);
-
-        // Prepare employee data with order
-        $employeeData = [];
-        foreach ($validated['employee_ids'] as $index => $employeeId) {
-            $employeeData[$employeeId] = ['order' => $index];
-        }
-
-        $group->employees()->attach($employeeData);
+        $group->employees()->attach($validated['employee_ids']);
 
         return response()->json([
             'success' => true,
@@ -59,14 +52,7 @@ class EmployeeGroupController extends Controller
         ]);
 
         $group->update(['name' => $validated['name']]);
-
-        // Prepare employee data with order
-        $employeeData = [];
-        foreach ($validated['employee_ids'] as $index => $employeeId) {
-            $employeeData[$employeeId] = ['order' => $index];
-        }
-
-        $group->employees()->sync($employeeData);
+        $group->employees()->sync($validated['employee_ids']);
 
         return response()->json([
             'success' => true,

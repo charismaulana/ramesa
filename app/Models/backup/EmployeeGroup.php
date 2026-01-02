@@ -13,10 +13,7 @@ class EmployeeGroup extends Model
      */
     public function employees()
     {
-        return $this->belongsToMany(Employee::class, 'employee_group_members')
-            ->withTimestamps()
-            ->withPivot('order')
-            ->orderBy('employee_group_members.order');
+        return $this->belongsToMany(Employee::class, 'employee_group_members');
     }
 
     /**
