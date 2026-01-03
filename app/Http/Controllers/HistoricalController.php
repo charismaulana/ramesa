@@ -64,7 +64,10 @@ class HistoricalController extends Controller
 
         $attendances = $query->paginate(20)->withQueryString();
 
-        return view('historical.index', compact('attendances', 'sortBy', 'sortDir'));
+        // Get employee groups for bulk delete feature
+        $groups = \App\Models\EmployeeGroup::orderBy('name')->get();
+
+        return view('historical.index', compact('attendances', 'sortBy', 'sortDir', 'groups'));
     }
 
     public function exportForm()
@@ -592,5 +595,44 @@ class HistoricalController extends Controller
 
         $filename = "Meal_Recap_{$location}_" . date('Ymd', strtotime($startDate)) . ".pdf";
         return $pdf->download($filename);
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'delete_date' => 'required|date',
+            'delete_location' => 'nullable|string',
+            'delete_group_id' => 'nullable|exists:employee_groups,id',
+        ]);
+
+        $query = Attendance::whereDate('scanned_at', $validated['delete_date']);
+
+        // Filter by location if specified
+        if (!empty($validated['delete_location'])) {
+            $query->where('location', $validated['delete_location']);
+        }
+
+        // Filter by employee group if specified
+        if (!empty($validated['delete_group_id'])) {
+            $group = \App\Models\EmployeeGroup::with('employees')->find($validated['delete_group_id']);
+            if ($group) {
+                $employeeIds = $group->employees->pluck('id')->toArray();
+                $query->whereIn('employee_id', $employeeIds);
+            }
+        }
+
+        // Get count before delete for feedback
+        $count = $query->count();
+
+        // Soft delete the records
+        $deleted = $query->delete();
+
+        $message = "Successfully deleted {$count} attendance records";
+        if (!empty($validated['delete_location'])) {
+            $message .= " from {$validated['delete_location']}";
+        }
+        $message .= " on {$validated['delete_date']}";
+
+        return back()->with('success', $message);
     }
 }

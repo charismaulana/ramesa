@@ -85,7 +85,7 @@
     </div>
 
     <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h2 class="card-title">Attendance Records
                 ({{ $attendances->total() }})</h2>
         </div>
@@ -290,4 +290,96 @@
             </div>
         @endif
     </div>
+
+    <!-- Recap Export Modal -->
+    <div id="recapModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center;">
+        <div
+            style="background: var(--card-bg); border: 2px solid var(--primary); border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="color: var(--primary); margin: 0;">Meal Recap Export</h3>
+                <button type="button" onclick="closeRecapModal()"
+                    style="background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <form id="recapForm" action="{{ route('historical.recap') }}" method="GET">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label">Company Header</label>
+                    <input type="text" name="company_header" class="form-control" value="PT. Brylian Indah"
+                        placeholder="Company name...">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label">Location *</label>
+                    <select name="location" class="form-control" required>
+                        <option value="Ramba">Ramba</option>
+                        <option value="Bentayan">Bentayan</option>
+                        <option value="Keluang">Keluang</option>
+                        <option value="Mangunjaya">Mangunjaya</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label">Start Date *</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label">End Date *</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                    <div style="flex: 1;">
+                        <label class="form-label">Prepared By</label>
+                        <input type="text" name="prepared_by" class="form-control" placeholder="Name...">
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="form-label">Position</label>
+                        <input type="text" name="prepared_position" class="form-control" value="Camp Boss"
+                            placeholder="Position...">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                    <div style="flex: 1;">
+                        <label class="form-label">Checked By</label>
+                        <input type="text" name="checked_by" class="form-control" value="Dedy B. / Rai A. / Marnita"
+                            placeholder="Name...">
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="form-label">Position</label>
+                        <input type="text" name="checked_position" class="form-control" value="GS Ramba"
+                            placeholder="Position...">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeRecapModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-file-earmark-excel"></i> Export Excel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openRecapModal() {
+            document.getElementById('recapModal').style.display = 'flex';
+        }
+
+        function closeRecapModal() {
+            document.getElementById('recapModal').style.display = 'none';
+        }
+
+        // Close modal on background click
+        document.getElementById('recapModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeRecapModal();
+            }
+        });
+    </script>
 @endsection
