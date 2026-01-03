@@ -47,23 +47,23 @@
                         <div class="col-6">
                             <div class="form-group">
                                 <label class="form-label" for="department">Department</label>
-                                <input type="text" name="department" id="department" class="form-control"
-                                    list="departmentList" value="{{ old('department') }}"
-                                    placeholder="Select or type department">
-                                <datalist id="departmentList">
-                                    <option value="GS">
-                                    <option value="ICT">
-                                    <option value="SCM">
-                                    <option value="HSSE">
-                                    <option value="PO">
-                                    <option value="RAM">
-                                    <option value="WS">
-                                    <option value="FM">
-                                    <option value="RELATION">
-                                    <option value="PE">
-                                    <option value="Plan & Eval">
-                                    <option value="LMF">
-                                </datalist>
+                                <select name="department" id="department" class="form-control">
+                                    <option value="">Select Department</option>
+                                    <option value="GS" {{ old('department') == 'GS' ? 'selected' : '' }}>GS</option>
+                                    <option value="ICT" {{ old('department') == 'ICT' ? 'selected' : '' }}>ICT</option>
+                                    <option value="SCM" {{ old('department') == 'SCM' ? 'selected' : '' }}>SCM</option>
+                                    <option value="HSSE" {{ old('department') == 'HSSE' ? 'selected' : '' }}>HSSE</option>
+                                    <option value="PO" {{ old('department') == 'PO' ? 'selected' : '' }}>PO</option>
+                                    <option value="RAM" {{ old('department') == 'RAM' ? 'selected' : '' }}>RAM</option>
+                                    <option value="WS" {{ old('department') == 'WS' ? 'selected' : '' }}>WS</option>
+                                    <option value="FM" {{ old('department') == 'FM' ? 'selected' : '' }}>FM</option>
+                                    <option value="RELATION" {{ old('department') == 'RELATION' ? 'selected' : '' }}>RELATION
+                                    </option>
+                                    <option value="PE" {{ old('department') == 'PE' ? 'selected' : '' }}>PE</option>
+                                    <option value="Plan & Eval" {{ old('department') == 'Plan & Eval' ? 'selected' : '' }}>
+                                        Plan & Eval</option>
+                                    <option value="LMF" {{ old('department') == 'LMF' ? 'selected' : '' }}>LMF</option>
+                                </select>
                             </div>
                         </div>
                     </div>

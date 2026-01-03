@@ -219,6 +219,125 @@
     </div>
     </div>
 
+    <!-- Quick Add Employee Modal -->
+    <div id="quickAddEmployeeModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; align-items: center; justify-content: center; overflow-y: auto;">
+        <div
+            style="background: #1a0a0a; border: 2px solid var(--primary); border-radius: 12px; padding: 1.5rem; max-width: 600px; width: 95%; margin: 2rem auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="color: var(--primary); margin: 0;">➕ Quick Add Employee</h3>
+                <button type="button" onclick="closeQuickAddEmployee()"
+                    style="background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <form id="quickAddEmployeeForm">
+                <div class="form-group">
+                    <label class="form-label">Employee Number <small style="color: var(--text-muted);">(Leave blank for
+                            visitors/subcontractors - will auto-generate)</small></label>
+                    <input type="text" id="newEmployeeNumber" class="form-control"
+                        placeholder="e.g., 19010001 or leave blank">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Full Name *</label>
+                    <input type="text" id="newEmployeeName" class="form-control" placeholder="Enter full name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Company</label>
+                    <input type="text" id="newEmployeeCompany" class="form-control"
+                        placeholder="e.g., GS Ramba, PT Subkon, Visitor">
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label">Position</label>
+                            <input type="text" id="newEmployeePosition" class="form-control" placeholder="e.g., Technician">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <input type="text" id="newEmployeeDepartment" class="form-control" list="quickAddDepartmentList"
+                                placeholder="Select or type department">
+                            <datalist id="quickAddDepartmentList">
+                                <option value="GS">
+                                <option value="ICT">
+                                <option value="SCM">
+                                <option value="HSSE">
+                                <option value="PO">
+                                <option value="RAM">
+                                <option value="WS">
+                                <option value="FM">
+                                <option value="RELATION">
+                                <option value="PE">
+                                <option value="Plan & Eval">
+                                <option value="LMF">
+                            </datalist>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label">Homebase *</label>
+                            <select id="newEmployeeLocation" class="form-control" required>
+                                <option value="">Select Homebase</option>
+                                <option value="Ramba">Ramba</option>
+                                <option value="Bentayan">Bentayan</option>
+                                <option value="Mangunjaya">Mangunjaya</option>
+                                <option value="Keluang">Keluang</option>
+                                <option value="Rig 01">Rig 01</option>
+                                <option value="Rig 02">Rig 02</option>
+                                <option value="Rig 03">Rig 03</option>
+                                <option value="Rig 06">Rig 06</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label">Accommodation</label>
+                            <input type="text" id="newEmployeeAccommodation" class="form-control"
+                                placeholder="e.g., Camp 1">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label">Active Status *</label>
+                            <select id="newEmployeeActiveStatus" class="form-control" required>
+                                <option value="active" selected>Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label">Employee Status *</label>
+                            <select id="newEmployeeStatus" class="form-control" required>
+                                <option value="">Select Status</option>
+                                <option value="Pekerja">Pekerja</option>
+                                <option value="TA">TA</option>
+                                <option value="TKJP">TKJP</option>
+                                <option value="Contractor">Contractor</option>
+                                <option value="Visitor">Visitor</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-1" style="margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Create Employee
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeQuickAddEmployee()">
+                        <i class="bi bi-arrow-left"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 @endsection
 
 @push('styles')
@@ -453,50 +572,50 @@
             entryCount++;
             const container = document.getElementById('entries-container');
             const entryHtml = `
-                                                                                                        <div class="entry-row" id="entry-${entryCount}">
-                                                                                                            <div class="entry-number">${entryCount}</div>
-                                                                                                            <div class="entry-content">
-                                                                                                                <div class="employee-select">
-                                                                                                                    <div class="employee-search-container">
-                                                                                                                        <input type="text" class="form-control employee-search" 
-                                                                                                                            placeholder="Search employee..." 
-                                                                                                                            onkeyup="searchEmployee(this, ${entryCount})"
-                                                                                                                            onfocus="showSuggestions(${entryCount})"
-                                                                                                                            data-entry="${entryCount}">
-                                                                                                                        <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
-                                                                                                                        <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
-                                                                                                                    </div>
-                                                                                                                    <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
-                                                                                                                        <span id="selected-name-${entryCount}"></span>
-                                                                                                                        <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
-                                                                                                                            <i class="bi bi-x"></i>
-                                                                                                                        </button>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                                <div class="meal-checkboxes">
-                                                                                                                    <label class="meal-checkbox">
-                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast">
-                                                                                                                        <span>🌅 B'fast</span>
-                                                                                                                    </label>
-                                                                                                                    <label class="meal-checkbox">
-                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch">
-                                                                                                                        <span>☀️ Lunch</span>
-                                                                                                                    </label>
-                                                                                                                    <label class="meal-checkbox">
-                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner">
-                                                                                                                        <span>🌙 Dinner</span>
-                                                                                                                    </label>
-                                                                                                                    <label class="meal-checkbox">
-                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper">
-                                                                                                                        <span>🌃 Supper</span>
-                                                                                                                    </label>
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                            <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
-                                                                                                                <i class="bi bi-trash"></i>
-                                                                                                            </button>
-                                                                                                        </div>
-                                                                                                    `;
+                                                                                                                        <div class="entry-row" id="entry-${entryCount}">
+                                                                                                                            <div class="entry-number">${entryCount}</div>
+                                                                                                                            <div class="entry-content">
+                                                                                                                                <div class="employee-select">
+                                                                                                                                    <div class="employee-search-container">
+                                                                                                                                        <input type="text" class="form-control employee-search" 
+                                                                                                                                            placeholder="Search employee..." 
+                                                                                                                                            onkeyup="searchEmployee(this, ${entryCount})"
+                                                                                                                                            onfocus="showSuggestions(${entryCount})"
+                                                                                                                                            data-entry="${entryCount}">
+                                                                                                                                        <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
+                                                                                                                                        <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
+                                                                                                                                    </div>
+                                                                                                                                    <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
+                                                                                                                                        <span id="selected-name-${entryCount}"></span>
+                                                                                                                                        <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
+                                                                                                                                            <i class="bi bi-x"></i>
+                                                                                                                                        </button>
+                                                                                                                                    </div>
+                                                                                                                                </div>
+                                                                                                                                <div class="meal-checkboxes">
+                                                                                                                                    <label class="meal-checkbox">
+                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast">
+                                                                                                                                        <span>🌅 B'fast</span>
+                                                                                                                                    </label>
+                                                                                                                                    <label class="meal-checkbox">
+                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch">
+                                                                                                                                        <span>☀️ Lunch</span>
+                                                                                                                                    </label>
+                                                                                                                                    <label class="meal-checkbox">
+                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner">
+                                                                                                                                        <span>🌙 Dinner</span>
+                                                                                                                                    </label>
+                                                                                                                                    <label class="meal-checkbox">
+                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper">
+                                                                                                                                        <span>🌃 Supper</span>
+                                                                                                                                    </label>
+                                                                                                                                </div>
+                                                                                                                            </div>
+                                                                                                                            <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
+                                                                                                                                <i class="bi bi-trash"></i>
+                                                                                                                            </button>
+                                                                                                                        </div>
+                                                                                                                    `;
             container.insertAdjacentHTML('beforeend', entryHtml);
             updateNoEntriesMessage();
         }
@@ -523,11 +642,11 @@
             if (entries.length === 0) {
                 if (!noEntriesEl) {
                     container.innerHTML = `
-                                                                                                                <div class="no-entries">
-                                                                                                                    <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                                                                                                    <p>No entries yet. Click "Add Entry" to start.</p>
-                                                                                                                </div>
-                                                                                                            `;
+                                                                                                                                <div class="no-entries">
+                                                                                                                                    <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                                                                                                                    <p>No entries yet. Click "Add Entry" to start.</p>
+                                                                                                                                </div>
+                                                                                                                            `;
                 }
             } else {
                 if (noEntriesEl) {
@@ -551,17 +670,27 @@
                 (emp.department && emp.department.toLowerCase().includes(query))
             ).slice(0, 10);
 
+            let html = '';
             if (filtered.length === 0) {
-                suggestionsEl.innerHTML = '<div class="employee-suggestion">No employees found</div>';
+                html = '<div class="employee-suggestion" style="color: var(--text-muted);">No employees found</div>';
             } else {
-                suggestionsEl.innerHTML = filtered.map(emp => `
-                                                                                                            <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
-                                                                                                                <strong>${emp.employee_number}</strong> - ${emp.name}
-                                                                                                                <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
-                                                                                                            </div>
-                                                                                                        `).join('');
+                html = filtered.map(emp => `
+                                    <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
+                                        <strong>${emp.employee_number}</strong> - ${emp.name}
+                                        <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
+                                    </div>
+                                `).join('');
             }
 
+            // Always show "Add New Employee" option
+            html += `
+                                <div class="employee-suggestion" onclick="openQuickAddEmployee(${entryIndex})" style="background: rgba(255,69,0,0.1); border-top: 1px solid var(--primary);">
+                                    <i class="bi bi-plus-circle" style="color: var(--primary);"></i>
+                                    <strong style="color: var(--primary);"> + Add New Employee</strong>
+                                </div>
+                            `;
+
+            suggestionsEl.innerHTML = html;
             suggestionsEl.style.display = 'block';
         }
 
@@ -769,25 +898,25 @@
             }
 
             groupsList.innerHTML = allGroups.map(group => `
-                                                        <div style="padding: 1rem; border: 1px solid var(--card-border); border-radius: 8px; margin-bottom: 0.75rem; background: rgba(255,255,255,0.02);">
-                                                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                                <div>
-                                                                    <strong style="color: var(--primary);">${group.name}</strong>
-                                                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
-                                                                        ${group.employees.length} employees
-                                                                    </p>
-                                                                </div>
-                                                                <div style="display: flex; gap: 0.5rem;">
-                                                                    <button class="btn btn-secondary btn-sm" onclick="editGroup(${group.id})">
-                                                                        <i class="bi bi-pencil"></i> Edit
-                                                                    </button>
-                                                                    <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id}, '${group.name}')">
-                                                                        <i class="bi bi-trash"></i> Delete
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    `).join('');
+                                                                        <div style="padding: 1rem; border: 1px solid var(--card-border); border-radius: 8px; margin-bottom: 0.75rem; background: rgba(255,255,255,0.02);">
+                                                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                                                <div>
+                                                                                    <strong style="color: var(--primary);">${group.name}</strong>
+                                                                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
+                                                                                        ${group.employees.length} employees
+                                                                                    </p>
+                                                                                </div>
+                                                                                <div style="display: flex; gap: 0.5rem;">
+                                                                                    <button class="btn btn-secondary btn-sm" onclick="editGroup(${group.id})">
+                                                                                        <i class="bi bi-pencil"></i> Edit
+                                                                                    </button>
+                                                                                    <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id}, '${group.name}')">
+                                                                                        <i class="bi bi-trash"></i> Delete
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    `).join('');
         }
 
         async function saveGroup() {
@@ -993,35 +1122,35 @@
             const container = document.getElementById('selectedMembersList');
             const emptyMessage = document.getElementById('emptySelectedMessage');
             const countSpan = document.getElementById('selectedMembersCount');
-            
+
             countSpan.textContent = selectedMembers.length;
-            
+
             if (selectedMembers.length === 0) {
                 container.innerHTML = ''; // Clear container
                 emptyMessage.style.display = 'block';
                 return;
             }
-            
+
             emptyMessage.style.display = 'none';
-            
+
             container.innerHTML = selectedMembers.map((member, index) => `
-                    <div class="selected-member-item" 
-                        draggable="true" 
-                        data-id="${member.id}"
-                        data-index="${index}"
-                        ondragstart="dragStart(event)" 
-                        ondragover="dragOver(event)" 
-                        ondrop="drop(event)"
-                        ondragend="dragEnd(event)"
-                        style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--card-border); background: rgba(255,255,255,0.02); cursor: move; font-size: 0.85rem;">
-                        <i class="bi bi-grip-vertical" style="color: var(--text-muted); cursor: grab;"></i>
-                        <span style="flex: 1;">${member.number} - ${member.name} (${member.dept})</span>
-                        <button type="button" onclick="removeEmployeeFromSelected(${member.id})" 
-                            style="padding: 0.2rem 0.5rem; background: #dc3545; border: none; color: white; border-radius: 4px; cursor: pointer;">
-                            <i class="bi bi-arrow-left"></i> Remove
-                        </button>
-                    </div>
-                `).join('');
+                                    <div class="selected-member-item" 
+                                        draggable="true" 
+                                        data-id="${member.id}"
+                                        data-index="${index}"
+                                        ondragstart="dragStart(event)" 
+                                        ondragover="dragOver(event)" 
+                                        ondrop="drop(event)"
+                                        ondragend="dragEnd(event)"
+                                        style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--card-border); background: rgba(255,255,255,0.02); cursor: move; font-size: 0.85rem;">
+                                        <i class="bi bi-grip-vertical" style="color: var(--text-muted); cursor: grab;"></i>
+                                        <span style="flex: 1;">${member.number} - ${member.name} (${member.dept})</span>
+                                        <button type="button" onclick="removeEmployeeFromSelected(${member.id})" 
+                                            style="padding: 0.2rem 0.5rem; background: #dc3545; border: none; color: white; border-radius: 4px; cursor: pointer;">
+                                            <i class="bi bi-arrow-left"></i> Remove
+                                        </button>
+                                    </div>
+                                `).join('');
         }
 
         // Drag and Drop Functions
@@ -1136,19 +1265,19 @@
         };
 
         // Update editGroup to populate selectedMembers
-        window.editGroup = function(groupId) {
+        window.editGroup = function (groupId) {
             // Find group in allGroups array
             const group = allGroups.find(g => g.id === groupId);
             if (!group) {
                 alert('Group not found');
                 return;
             }
-            
+
             currentEditingGroupId = group.id;
             document.getElementById('groupName').value = group.name;
             document.getElementById('saveButtonText').textContent = 'Update';
             document.getElementById('cancelButton').style.display = 'inline-block';
-            
+
             // Populate selected members in order
             selectedMembers = group.employees.map((emp, index) => ({
                 id: emp.id,
@@ -1157,10 +1286,10 @@
                 dept: emp.department || 'N/A',
                 order: emp.pivot?.order ?? index
             })).sort((a, b) => a.order - b.order);
-            
+
             renderSelectedMembers();
             filterAvailableEmployees();
-            
+
             // Scroll to top
             document.querySelector('.groups-modal-content').scrollTop = 0;
         };
@@ -1187,5 +1316,106 @@
                 }
             });
         }
+
+        // Quick Add Employee Functions
+        let pendingEntryIndex = null;
+
+        function openQuickAddEmployee(entryIndex) {
+            pendingEntryIndex = entryIndex;
+            document.getElementById('quickAddEmployeeModal').style.display = 'flex';
+            document.getElementById('newEmployeeName').focus();
+            // Hide suggestions
+            document.querySelectorAll('.employee-suggestions').forEach(el => {
+                el.style.display = 'none';
+            });
+        }
+
+        function closeQuickAddEmployee() {
+            document.getElementById('quickAddEmployeeModal').style.display = 'none';
+            document.getElementById('quickAddEmployeeForm').reset();
+            pendingEntryIndex = null;
+        }
+
+        // Handle Quick Add Employee form submission
+        document.getElementById('quickAddEmployeeForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const employeeNumber = document.getElementById('newEmployeeNumber').value.trim();
+            const employeeName = document.getElementById('newEmployeeName').value.trim();
+            const company = document.getElementById('newEmployeeCompany').value.trim();
+            const position = document.getElementById('newEmployeePosition').value.trim();
+            const department = document.getElementById('newEmployeeDepartment').value;
+            const location = document.getElementById('newEmployeeLocation').value;
+            const accommodation = document.getElementById('newEmployeeAccommodation').value.trim();
+            const activeStatus = document.getElementById('newEmployeeActiveStatus').value;
+            const employeeStatus = document.getElementById('newEmployeeStatus').value;
+
+            if (!employeeName) {
+                alert('Please fill in Full Name');
+                return;
+            }
+
+            if (!location) {
+                alert('Please select Homebase');
+                return;
+            }
+
+            if (!employeeStatus) {
+                alert('Please select Employee Status');
+                return;
+            }
+
+            try {
+                const response = await fetch('{{ route("employees.store") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        employee_number: employeeNumber,
+                        name: employeeName,
+                        company: company,
+                        position: position,
+                        department: department,
+                        location: location,
+                        accommodation: accommodation,
+                        active_status: activeStatus,
+                        employee_status: employeeStatus,
+                        quick_add: true
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Add the new employee to the local employees array
+                    const newEmployee = data.employee;
+                    employees.push(newEmployee);
+
+                    // If there's a pending entry, select the new employee
+                    if (pendingEntryIndex !== null) {
+                        selectEmployee(
+                            pendingEntryIndex,
+                            newEmployee.id,
+                            newEmployee.employee_number,
+                            newEmployee.name,
+                            newEmployee.department || '',
+                            newEmployee.employee_status || ''
+                        );
+                    }
+
+                    // Close modal and reset
+                    closeQuickAddEmployee();
+                    alert('Employee "' + employeeName + '" added successfully!');
+                } else {
+                    alert(data.message || 'Failed to add employee');
+                }
+            } catch (error) {
+                console.error('Error adding employee:', error);
+                alert('Failed to add employee. Please try again.');
+            }
+        });
     </script>
 @endpush
