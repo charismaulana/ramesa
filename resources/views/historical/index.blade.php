@@ -196,7 +196,7 @@
                             </td>
                             <td>
                                 @if($attendance->absence_proof)
-                                    <a href="{{ Storage::url($attendance->absence_proof) }}" target="_blank"
+                                    <a href="{{ Storage::disk('public_direct')->url($attendance->absence_proof) }}" target="_blank"
                                         class="btn btn-primary btn-sm" title="View Absence Proof">
                                         <i class="bi bi-file-earmark-image"></i>
                                     </a>

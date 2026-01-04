@@ -291,6 +291,51 @@
         @endif
     </div>
 
+    <!-- Bulk Delete Card -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">🗑️ Bulk Delete</h2>
+            <small style="color: var(--text-muted);">Delete multiple attendance records at once</small>
+        </div>
+
+        <form action="{{ route('historical.bulkDelete') }}" method="POST" onsubmit="return confirmBulkDelete()">
+            @csrf
+            <div class="filter-bar">
+                <div class="form-group">
+                    <label class="form-label">Date *</label>
+                    <input type="date" name="delete_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <select name="delete_location" class="form-control">
+                        <option value="">All Locations</option>
+                        <option value="Ramba">Ramba</option>
+                        <option value="Bentayan">Bentayan</option>
+                        <option value="Keluang">Keluang</option>
+                        <option value="Mangunjaya">Mangunjaya</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Employee Group</label>
+                    <select name="delete_group_id" class="form-control">
+                        <option value="">All Employees</option>
+                        @foreach($groups ?? [] as $group)
+                            <option value="{{ $group->id }}">{{ $group->name }} ({{ $group->employees->count() }})</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash"></i> Delete Records
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <!-- Recap Export Modal -->
     <div id="recapModal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center;">
@@ -381,5 +426,21 @@
                 closeRecapModal();
             }
         });
+
+        // Bulk delete confirmation
+        function confirmBulkDelete() {
+            const date = document.querySelector('input[name="delete_date"]').value;
+            const location = document.querySelector('select[name="delete_location"]').value || 'All Locations';
+            const groupSelect = document.querySelector('select[name="delete_group_id"]');
+            const group = groupSelect.options[groupSelect.selectedIndex].text || 'All Employees';
+
+            const message = `⚠️ WARNING: This will permanently delete all attendance records for:\n\n` +
+                `📅 Date: ${date}\n` +
+                `📍 Location: ${location}\n` +
+                `👥 Group: ${group}\n\n` +
+                `This action cannot be undone. Are you sure?`;
+
+            return confirm(message);
+        }
     </script>
 @endsection

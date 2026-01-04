@@ -64,8 +64,8 @@ return [
         // Files stored directly in public_html/storage/
         'public_direct' => [
             'driver' => 'local',
-            'root' => base_path('../public_html/storage'),
-            'url' => env('APP_URL') . '/storage',
+            'root' => public_path('storage'),
+            'url' => 'http://127.0.0.1:8000/storage',
             'visibility' => 'public',
             'throw' => false,
         ],

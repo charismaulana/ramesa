@@ -85,7 +85,8 @@
                     <div
                         style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(0, 255, 136, 0.1); border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
                         <span style="color: var(--success);">Current file:</span>
-                        <a href="{{ Storage::url($attendance->absence_proof) }}" target="_blank" class="btn btn-primary btn-sm">
+                        <a href="{{ Storage::disk('public_direct')->url($attendance->absence_proof) }}" target="_blank"
+                            class="btn btn-primary btn-sm">
                             <i class="bi bi-file-earmark-image"></i> View
                         </a>
                         <span
