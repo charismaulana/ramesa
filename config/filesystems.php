@@ -65,7 +65,7 @@ return [
         'public_direct' => [
             'driver' => 'local',
             'root' => public_path('storage'),
-            'url' => 'http://127.0.0.1:8000/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
             'throw' => false,
         ],
