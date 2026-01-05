@@ -18,7 +18,23 @@ class BulkController extends Controller
 
         $groups = EmployeeGroup::with('employees:id,name,employee_number,department,employee_status')->get();
 
-        return view('bulk.index', compact('employees', 'groups'));
+        // Get recent absence proof files from the last 30 days
+        $recentProofs = Attendance::whereNotNull('absence_proof')
+            ->where('scanned_at', '>=', now()->subDays(30))
+            ->select('absence_proof')
+            ->distinct()
+            ->orderBy('scanned_at', 'desc')
+            ->limit(50)
+            ->pluck('absence_proof')
+            ->map(function ($path) {
+                return [
+                    'path' => $path,
+                    'filename' => basename($path),
+                    'url' => \Storage::disk('public_direct')->url($path)
+                ];
+            });
+
+        return view('bulk.index', compact('employees', 'groups', 'recentProofs'));
     }
 
     public function store(Request $request)
@@ -28,6 +44,7 @@ class BulkController extends Controller
             'recorded_by' => 'required|string|max:255',
             'location' => 'nullable|string',
             'absence_proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:10240', // 10MB max
+            'existing_proof' => 'nullable|string', // Path to existing file
             'entries' => 'required|array|min:1|max:200',
             'entries.*.employee_id' => 'required|exists:employees,id',
             'entries.*.meals' => 'required|array|min:1',
@@ -40,8 +57,10 @@ class BulkController extends Controller
         $successCount = 0;
         $skippedCount = 0;
 
-        // Handle file upload if present
+        // Handle file upload or existing file selection
         $absenceProofPath = null;
+
+        // Priority: new file upload > existing file selection
         if ($request->hasFile('absence_proof')) {
             $file = $request->file('absence_proof');
             $extension = $file->getClientOriginalExtension();
@@ -56,6 +75,16 @@ class BulkController extends Controller
             }
 
             $absenceProofPath = $file->storeAs('absence_proofs', $filename, 'public_direct');
+        } elseif (!empty($validated['existing_proof'])) {
+            // Use existing file path if provided
+            $absenceProofPath = $validated['existing_proof'];
+        }
+
+        // REQUIRED: Ensure absence proof is provided
+        if (empty($absenceProofPath)) {
+            return redirect()->back()
+                ->withErrors(['absence_proof' => 'Absence Proof is required. Please upload a file or select an existing one.'])
+                ->withInput();
         }
 
         foreach ($validated['entries'] as $entry) {

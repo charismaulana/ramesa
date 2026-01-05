@@ -19,22 +19,22 @@
                 <h2 class="card-title">Input Settings</h2>
             </div>
 
-            <div class="row">
-                <div class="col-4">
+            <div class="row" style="row-gap: 0.75rem;">
+                <div class="col-2">
                     <div class="form-group">
                         <label class="form-label" for="date">Date *</label>
                         <input type="date" name="date" id="date" class="form-control"
                             value="{{ old('date', date('Y-m-d')) }}" required>
                     </div>
                 </div>
-                <div class="col-4">
+                <div class="col-2">
                     <div class="form-group">
                         <label class="form-label" for="recorded_by">Recorded By *</label>
                         <input type="text" name="recorded_by" id="recorded_by" class="form-control"
                             value="{{ old('recorded_by') }}" placeholder="Your name" required>
                     </div>
                 </div>
-                <div class="col-4">
+                <div class="col-2">
                     <div class="form-group">
                         <label class="form-label" for="location">Meal Location *</label>
                         <select name="location" id="location" class="form-control" required>
@@ -45,28 +45,36 @@
                         </select>
                     </div>
                 </div>
-            </div>
-
-            <div class="row">
-                <div class="col-6">
+                <div class="col-4">
                     <div class="form-group">
-                        <label class="form-label" for="absence_proof">
-                            📎 Absence Proof (Image/PDF) - Optional
-                        </label>
-                        <input type="file" name="absence_proof" id="absence_proof" class="form-control"
-                            accept=".jpg,.jpeg,.png,.pdf" onchange="previewFile()">
-                        <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">
-                            Accepted formats: JPG, PNG, PDF (max 10MB)
-                        </small>
-                        <div id="file-preview" style="margin-top: 0.5rem; display: none;">
-                            <span style="color: var(--success);">
-                                ✓ <span id="file-name"></span>
-                            </span>
+                        <label class="form-label">📎 Absence Proof *</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            @if($recentProofs->count() > 0)
+                                <select name="existing_proof" id="existing_proof" class="form-control" style="flex: 1;"
+                                    onchange="handleProofSelection()">
+                                    <option value="">-- Select existing or upload --</option>
+                                    @foreach($recentProofs as $proof)
+                                        <option value="{{ $proof['path'] }}" data-url="{{ $proof['url'] }}">
+                                            {{ $proof['filename'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <label class="btn btn-primary" for="absence_proof" style="margin: 0; white-space: nowrap;">
+                                    <i class="bi bi-upload"></i> Upload
+                                </label>
+                            @else
+                                <label class="btn btn-primary" for="absence_proof" style="margin: 0; flex: 1;">
+                                    <i class="bi bi-upload"></i> Upload File
+                                </label>
+                            @endif
+                            <input type="file" name="absence_proof" id="absence_proof" style="display: none;"
+                                accept=".jpg,.jpeg,.png,.pdf" onchange="handleFileUpload()">
                         </div>
+                        <div id="proof-status" style="margin-top: 0.5rem; font-size: 0.85rem;"></div>
                     </div>
                 </div>
                 @if($groups->count() > 0)
-                    <div class="col-6">
+                    <div class="col-2">
                         <div class="form-group">
                             <label class="form-label">👥 Quick Load from Group</label>
                             <div style="display: flex; gap: 0.5rem;">
@@ -82,9 +90,6 @@
                                     <i class="bi bi-download"></i> Load
                                 </button>
                             </div>
-                            <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">
-                                Auto-fill B/L/D for all group members
-                            </small>
                         </div>
                     </div>
                 @endif
@@ -566,6 +571,48 @@
         const employees = @json($employees);
         let entryCount = 0;
 
+        // Absence Proof Functions (Simplified for inline layout)
+        let hasProofSelected = false;
+
+        function handleProofSelection() {
+            const select = document.getElementById('existing_proof');
+            const selectedOption = select.options[select.selectedIndex];
+
+            if (selectedOption.value) {
+                hasProofSelected = true;
+                const url = selectedOption.dataset.url;
+                const filename = selectedOption.text;
+                document.getElementById('proof-status').innerHTML = `
+                        <span style="color: var(--success);">
+                            <i class="bi bi-check-circle"></i> Selected: ${filename}
+                            | <a href="${url}" target="_blank" style="color: var(--primary);">View</a>
+                        </span>
+                    `;
+            } else {
+                hasProofSelected = false;
+                document.getElementById('proof-status').innerHTML = '';
+            }
+        }
+
+        function handleFileUpload() {
+            const file = document.getElementById('absence_proof').files[0];
+            if (file) {
+                hasProofSelected = true;
+                // Clear dropdown selection
+                const select = document.getElementById('existing_proof');
+                if (select) select.value = '';
+
+                document.getElementById('proof-status').innerHTML = `
+                        <span style="color: var(--success);">
+                            <i class="bi bi-check-circle"></i> Uploaded: ${file.name}
+                        </span>
+                    `;
+            } else {
+                hasProofSelected = false;
+                document.getElementById('proof-status').innerHTML = '';
+            }
+        }
+
         function addEntry() {
             if (entryCount >= 200) {
                 alert('Maximum 200 entries allowed');
@@ -575,50 +622,50 @@
             entryCount++;
             const container = document.getElementById('entries-container');
             const entryHtml = `
-                                                                                                                                            <div class="entry-row" id="entry-${entryCount}">
-                                                                                                                                                <div class="entry-number">${entryCount}</div>
-                                                                                                                                                <div class="entry-content">
-                                                                                                                                                    <div class="employee-select">
-                                                                                                                                                        <div class="employee-search-container">
-                                                                                                                                                            <input type="text" class="form-control employee-search" 
-                                                                                                                                                                placeholder="Search employee..." 
-                                                                                                                                                                onkeyup="searchEmployee(this, ${entryCount})"
-                                                                                                                                                                onfocus="showSuggestions(${entryCount})"
-                                                                                                                                                                data-entry="${entryCount}">
-                                                                                                                                                            <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
-                                                                                                                                                            <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
-                                                                                                                                                        </div>
-                                                                                                                                                        <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
-                                                                                                                                                            <span id="selected-name-${entryCount}"></span>
-                                                                                                                                                            <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
-                                                                                                                                                                <i class="bi bi-x"></i>
+                                                                                                                                                        <div class="entry-row" id="entry-${entryCount}">
+                                                                                                                                                            <div class="entry-number">${entryCount}</div>
+                                                                                                                                                            <div class="entry-content">
+                                                                                                                                                                <div class="employee-select">
+                                                                                                                                                                    <div class="employee-search-container">
+                                                                                                                                                                        <input type="text" class="form-control employee-search" 
+                                                                                                                                                                            placeholder="Search employee..." 
+                                                                                                                                                                            onkeyup="searchEmployee(this, ${entryCount})"
+                                                                                                                                                                            onfocus="showSuggestions(${entryCount})"
+                                                                                                                                                                            data-entry="${entryCount}">
+                                                                                                                                                                        <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
+                                                                                                                                                                        <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
+                                                                                                                                                                    </div>
+                                                                                                                                                                    <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
+                                                                                                                                                                        <span id="selected-name-${entryCount}"></span>
+                                                                                                                                                                        <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
+                                                                                                                                                                            <i class="bi bi-x"></i>
+                                                                                                                                                                        </button>
+                                                                                                                                                                    </div>
+                                                                                                                                                                </div>
+                                                                                                                                                                <div class="meal-checkboxes">
+                                                                                                                                                                    <label class="meal-checkbox">
+                                                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast">
+                                                                                                                                                                        <span>🌅 B'fast</span>
+                                                                                                                                                                    </label>
+                                                                                                                                                                    <label class="meal-checkbox">
+                                                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch">
+                                                                                                                                                                        <span>☀️ Lunch</span>
+                                                                                                                                                                    </label>
+                                                                                                                                                                    <label class="meal-checkbox">
+                                                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner">
+                                                                                                                                                                        <span>🌙 Dinner</span>
+                                                                                                                                                                    </label>
+                                                                                                                                                                    <label class="meal-checkbox">
+                                                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper">
+                                                                                                                                                                        <span>🌃 Supper</span>
+                                                                                                                                                                    </label>
+                                                                                                                                                                </div>
+                                                                                                                                                            </div>
+                                                                                                                                                            <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
+                                                                                                                                                                <i class="bi bi-trash"></i>
                                                                                                                                                             </button>
                                                                                                                                                         </div>
-                                                                                                                                                    </div>
-                                                                                                                                                    <div class="meal-checkboxes">
-                                                                                                                                                        <label class="meal-checkbox">
-                                                                                                                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast">
-                                                                                                                                                            <span>🌅 B'fast</span>
-                                                                                                                                                        </label>
-                                                                                                                                                        <label class="meal-checkbox">
-                                                                                                                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch">
-                                                                                                                                                            <span>☀️ Lunch</span>
-                                                                                                                                                        </label>
-                                                                                                                                                        <label class="meal-checkbox">
-                                                                                                                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner">
-                                                                                                                                                            <span>🌙 Dinner</span>
-                                                                                                                                                        </label>
-                                                                                                                                                        <label class="meal-checkbox">
-                                                                                                                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper">
-                                                                                                                                                            <span>🌃 Supper</span>
-                                                                                                                                                        </label>
-                                                                                                                                                    </div>
-                                                                                                                                                </div>
-                                                                                                                                                <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
-                                                                                                                                                    <i class="bi bi-trash"></i>
-                                                                                                                                                </button>
-                                                                                                                                            </div>
-                                                                                                                                        `;
+                                                                                                                                                    `;
             container.insertAdjacentHTML('beforeend', entryHtml);
             updateNoEntriesMessage();
 
@@ -656,11 +703,11 @@
             if (entries.length === 0) {
                 if (!noEntriesEl) {
                     container.innerHTML = `
-                                                                                                                                                    <div class="no-entries">
-                                                                                                                                                        <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                                                                                                                                        <p>No entries yet. Click "Add Entry" to start.</p>
-                                                                                                                                                    </div>
-                                                                                                                                                `;
+                                                                                                                                                                <div class="no-entries">
+                                                                                                                                                                    <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                                                                                                                                                    <p>No entries yet. Click "Add Entry" to start.</p>
+                                                                                                                                                                </div>
+                                                                                                                                                            `;
                 }
             } else {
                 if (noEntriesEl) {
@@ -689,20 +736,20 @@
                 html = '<div class="employee-suggestion" style="color: var(--text-muted);">No employees found</div>';
             } else {
                 html = filtered.map(emp => `
-                                                        <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
-                                                            <strong>${emp.employee_number}</strong> - ${emp.name}
-                                                            <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
-                                                        </div>
-                                                    `).join('');
+                                                                    <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
+                                                                        <strong>${emp.employee_number}</strong> - ${emp.name}
+                                                                        <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
+                                                                    </div>
+                                                                `).join('');
             }
 
             // Always show "Add New Employee" option
             html += `
-                                                    <div class="employee-suggestion" onclick="openQuickAddEmployee(${entryIndex})" style="background: rgba(255,69,0,0.1); border-top: 1px solid var(--primary);">
-                                                        <i class="bi bi-plus-circle" style="color: var(--primary);"></i>
-                                                        <strong style="color: var(--primary);"> + Add New Employee</strong>
-                                                    </div>
-                                                `;
+                                                                <div class="employee-suggestion" onclick="openQuickAddEmployee(${entryIndex})" style="background: rgba(255,69,0,0.1); border-top: 1px solid var(--primary);">
+                                                                    <i class="bi bi-plus-circle" style="color: var(--primary);"></i>
+                                                                    <strong style="color: var(--primary);"> + Add New Employee</strong>
+                                                                </div>
+                                                            `;
 
             suggestionsEl.innerHTML = html;
             suggestionsEl.style.display = 'block';
@@ -756,6 +803,15 @@
 
             if (entryCount === 0) {
                 alert('Please add at least one entry');
+                return;
+            }
+
+            // Check if absence proof is selected or uploaded (REQUIRED)
+            const uploadedFile = document.getElementById('absence_proof').files[0];
+            const selectedExisting = document.getElementById('existing_proof') ? document.getElementById('existing_proof').value : '';
+
+            if (!uploadedFile && !selectedExisting) {
+                alert('Absence Proof is required! Please upload a file or select an existing one.');
                 return;
             }
 
@@ -959,25 +1015,25 @@
             }
 
             groupsList.innerHTML = allGroups.map(group => `
-                                                                                            <div style="padding: 1rem; border: 1px solid var(--card-border); border-radius: 8px; margin-bottom: 0.75rem; background: rgba(255,255,255,0.02);">
-                                                                                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                                                                    <div>
-                                                                                                        <strong style="color: var(--primary);">${group.name}</strong>
-                                                                                                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
-                                                                                                            ${group.employees.length} employees
-                                                                                                        </p>
-                                                                                                    </div>
-                                                                                                    <div style="display: flex; gap: 0.5rem;">
-                                                                                                        <button class="btn btn-secondary btn-sm" onclick="editGroup(${group.id})">
-                                                                                                            <i class="bi bi-pencil"></i> Edit
-                                                                                                        </button>
-                                                                                                        <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id}, '${group.name}')">
-                                                                                                            <i class="bi bi-trash"></i> Delete
-                                                                                                        </button>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        `).join('');
+                                                                                                        <div style="padding: 1rem; border: 1px solid var(--card-border); border-radius: 8px; margin-bottom: 0.75rem; background: rgba(255,255,255,0.02);">
+                                                                                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                                                                                <div>
+                                                                                                                    <strong style="color: var(--primary);">${group.name}</strong>
+                                                                                                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
+                                                                                                                        ${group.employees.length} employees
+                                                                                                                    </p>
+                                                                                                                </div>
+                                                                                                                <div style="display: flex; gap: 0.5rem;">
+                                                                                                                    <button class="btn btn-secondary btn-sm" onclick="editGroup(${group.id})">
+                                                                                                                        <i class="bi bi-pencil"></i> Edit
+                                                                                                                    </button>
+                                                                                                                    <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id}, '${group.name}')">
+                                                                                                                        <i class="bi bi-trash"></i> Delete
+                                                                                                                    </button>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    `).join('');
         }
 
         async function saveGroup() {
@@ -1195,23 +1251,23 @@
             emptyMessage.style.display = 'none';
 
             container.innerHTML = selectedMembers.map((member, index) => `
-                                                        <div class="selected-member-item" 
-                                                            draggable="true" 
-                                                            data-id="${member.id}"
-                                                            data-index="${index}"
-                                                            ondragstart="dragStart(event)" 
-                                                            ondragover="dragOver(event)" 
-                                                            ondrop="drop(event)"
-                                                            ondragend="dragEnd(event)"
-                                                            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--card-border); background: rgba(255,255,255,0.02); cursor: move; font-size: 0.85rem;">
-                                                            <i class="bi bi-grip-vertical" style="color: var(--text-muted); cursor: grab;"></i>
-                                                            <span style="flex: 1;">${member.number} - ${member.name} (${member.dept})</span>
-                                                            <button type="button" onclick="removeEmployeeFromSelected(${member.id})" 
-                                                                style="padding: 0.2rem 0.5rem; background: #dc3545; border: none; color: white; border-radius: 4px; cursor: pointer;">
-                                                                <i class="bi bi-arrow-left"></i> Remove
-                                                            </button>
-                                                        </div>
-                                                    `).join('');
+                                                                    <div class="selected-member-item" 
+                                                                        draggable="true" 
+                                                                        data-id="${member.id}"
+                                                                        data-index="${index}"
+                                                                        ondragstart="dragStart(event)" 
+                                                                        ondragover="dragOver(event)" 
+                                                                        ondrop="drop(event)"
+                                                                        ondragend="dragEnd(event)"
+                                                                        style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--card-border); background: rgba(255,255,255,0.02); cursor: move; font-size: 0.85rem;">
+                                                                        <i class="bi bi-grip-vertical" style="color: var(--text-muted); cursor: grab;"></i>
+                                                                        <span style="flex: 1;">${member.number} - ${member.name} (${member.dept})</span>
+                                                                        <button type="button" onclick="removeEmployeeFromSelected(${member.id})" 
+                                                                            style="padding: 0.2rem 0.5rem; background: #dc3545; border: none; color: white; border-radius: 4px; cursor: pointer;">
+                                                                            <i class="bi bi-arrow-left"></i> Remove
+                                                                        </button>
+                                                                    </div>
+                                                                `).join('');
         }
 
         // Drag and Drop Functions
