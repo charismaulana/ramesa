@@ -217,32 +217,13 @@
                     <a href="{{ $employees->previousPageUrl() }}">&laquo; Previous</a>
                 @endif
 
-                @php
-                    $start = max(1, $employees->currentPage() - 2);
-                    $end = min($employees->lastPage(), $employees->currentPage() + 2);
-                @endphp
-
-                @if($start > 1)
-                    <a href="{{ $employees->url(1) }}">1</a>
-                    @if($start > 2)
-                        <span style="color: var(--text-muted);">...</span>
-                    @endif
-                @endif
-
-                @for($page = $start; $page <= $end; $page++)
+                @foreach($employees->getUrlRange(1, $employees->lastPage()) as $page => $url)
                     @if($page == $employees->currentPage())
                         <span class="active">{{ $page }}</span>
                     @else
-                        <a href="{{ $employees->url($page) }}">{{ $page }}</a>
+                        <a href="{{ $url }}">{{ $page }}</a>
                     @endif
-                @endfor
-
-                @if($end < $employees->lastPage())
-                    @if($end < $employees->lastPage() - 1)
-                        <span style="color: var(--text-muted);">...</span>
-                    @endif
-                    <a href="{{ $employees->url($employees->lastPage()) }}">{{ $employees->lastPage() }}</a>
-                @endif
+                @endforeach
 
                 @if($employees->hasMorePages())
                     <a href="{{ $employees->nextPageUrl() }}">Next &raquo;</a>
