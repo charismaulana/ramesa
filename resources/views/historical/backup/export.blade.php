@@ -134,9 +134,6 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-download"></i> Export Excel
                 </button>
-                <button type="button" id="pdfExportBtn" class="btn btn-danger" style="display: none;" onclick="exportPDF()">
-                    <i class="bi bi-file-pdf"></i> Export PDF
-                </button>
                 <a href="{{ route('historical.index') }}" class="btn btn-secondary">
                     <i class="bi bi-arrow-left"></i> Back to Historical
                 </a>
@@ -216,7 +213,7 @@
             .d-flex.gap-1.mt-3 {
                 flex-direction: column;
             }
-            
+
             .d-flex.gap-1.mt-3 .btn {
                 width: 100%;
                 margin-bottom: 0.5rem;
@@ -232,7 +229,7 @@
             radio.addEventListener('change', function () {
                 const recapFields = document.getElementById('recapFields');
                 const pdfBtn = document.getElementById('pdfExportBtn');
-                
+
                 if (this.value === 'recap') {
                     recapFields.style.display = 'block';
                     pdfBtn.style.display = 'inline-block';

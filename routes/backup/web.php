@@ -72,6 +72,9 @@ Route::middleware(['auth', 'role'])->group(function () {
         Route::post('/groups', [\App\Http\Controllers\EmployeeGroupController::class, 'store'])->name('groups.store');
         Route::put('/groups/{id}', [\App\Http\Controllers\EmployeeGroupController::class, 'update'])->name('groups.update');
         Route::delete('/groups/{id}', [\App\Http\Controllers\EmployeeGroupController::class, 'destroy'])->name('groups.destroy');
+
+        // Bulk delete attendance route
+        Route::post('/historical/bulk-delete', [HistoricalController::class, 'bulkDelete'])->name('historical.bulkDelete');
     });
 
     // Super Admin only routes
