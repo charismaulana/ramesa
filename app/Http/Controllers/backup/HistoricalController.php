@@ -542,14 +542,14 @@ class HistoricalController extends Controller
             ->setHorizontalCentered(true)  // Center horizontally on page
             ->setVerticalCentered(true);   // Center vertically on page
 
-        // Set print area to columns B-I
-        $sheet->getPageSetup()->setPrintArea("B1:I{$borderEndRow}");
+        // Set print area to match thick border area (B2:I)
+        $sheet->getPageSetup()->setPrintArea("B2:I{$borderEndRow}");
 
-        // Set narrow margins (in inches): Top/Bottom 0.75, Left/Right 0.25, Header/Footer 0.3
+        // Set narrow margins (in inches): Top/Bottom 0.35 (0.9cm), Left/Right 0.25, Header/Footer 0.3
         $sheet->getPageMargins()
-            ->setTop(0.75)
+            ->setTop(0.35)
             ->setRight(0.25)
-            ->setBottom(0.75)
+            ->setBottom(0.35)
             ->setLeft(0.25)
             ->setHeader(0.3)
             ->setFooter(0.3);

@@ -101,6 +101,11 @@ class HistoricalController extends Controller
             return $this->recapExport($request);
         }
 
+        // If daily export, redirect to dailyExport method
+        if ($request->export_type === 'daily') {
+            return $this->dailyExport($request);
+        }
+
         $filters = [
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
@@ -523,6 +528,12 @@ class HistoricalController extends Controller
         $sheet->getStyle("C8")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
         $sheet->getStyle("C9")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 
+        // Re-apply left alignment to Prepared By / Checked By footer area
+        for ($footerRow = $positionRow - 4; $footerRow <= $positionRow; $footerRow++) {
+            $sheet->getStyle("C{$footerRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+            $sheet->getStyle("G{$footerRow}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        }
+
         // Set column widths: A,B,I,J,K = 4, C:H = 15
         $sheet->getColumnDimension('A')->setWidth(4);
         $sheet->getColumnDimension('B')->setWidth(4);
@@ -556,6 +567,277 @@ class HistoricalController extends Controller
 
         // Download
         $filename = "Meal_Recap_{$location}_" . date('Ymd', strtotime($startDate)) . ".xlsx";
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"{$filename}\"");
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function dailyExport(Request $request)
+    {
+        $startDate = $request->input('start_date', date('Y-m-d'));
+        $endDate = $request->input('end_date', date('Y-m-d'));
+        $location = $request->input('location', '') ?: 'All';
+
+        // Query attendance data for the date range - include employee's groups
+        $query = Attendance::with(['employee', 'employee.groups'])
+            ->whereDate('scanned_at', '>=', $startDate)
+            ->whereDate('scanned_at', '<=', $endDate);
+
+        if ($location !== 'All') {
+            $query->where('location', $location);
+        }
+
+        $attendances = $query->orderBy('scanned_at')->get();
+
+        // Group by employee AND date
+        $employeeAttendance = [];
+        foreach ($attendances as $attendance) {
+            $empId = $attendance->employee_id;
+            $attendanceDate = date('Y-m-d', strtotime($attendance->scanned_at));
+            $key = $empId . '_' . $attendanceDate;
+
+            if (!isset($employeeAttendance[$key])) {
+                // Get the first group name and order for this employee
+                $groupName = '';
+                $groupMemberOrder = 999; // Default high order for employees not in any group
+                if ($attendance->employee && $attendance->employee->groups->count() > 0) {
+                    $firstGroup = $attendance->employee->groups->first();
+                    $groupName = $firstGroup->name ?? '';
+                    $groupMemberOrder = $firstGroup->pivot->order ?? 999;
+                }
+
+                $employeeAttendance[$key] = [
+                    'employee' => $attendance->employee,
+                    'date' => $attendanceDate,
+                    'group_name' => $groupName,
+                    'group_member_order' => $groupMemberOrder,
+                    'breakfast' => false,
+                    'lunch' => false,
+                    'dinner' => false,
+                    'supper' => false,
+                    'snack' => false,
+                ];
+            }
+            $mealType = $attendance->meal_type;
+            if (isset($employeeAttendance[$key][$mealType])) {
+                $employeeAttendance[$key][$mealType] = true;
+            }
+        }
+
+        // Custom group order: Pekerja, TA, TKJP, Contractor, Visitor
+        $groupOrder = ['Pekerja' => 1, 'TA' => 2, 'TKJP' => 3, 'Contractor' => 4, 'Visitor' => 5];
+
+        // Helper function to extract group type from group name like "Ramba-Pekerja-1"
+        $getGroupOrder = function ($groupName) use ($groupOrder) {
+            if (empty($groupName))
+                return 999;
+            foreach ($groupOrder as $group => $order) {
+                if (stripos($groupName, $group) !== false) {
+                    return $order;
+                }
+            }
+            return 999; // Unknown groups at the end
+        };
+
+        // Sort by date, then by custom group type order, then by group name, then by member order within group
+        usort($employeeAttendance, function ($a, $b) use ($getGroupOrder) {
+            $dateCompare = strcmp($a['date'], $b['date']);
+            if ($dateCompare !== 0)
+                return $dateCompare;
+            // Sort by custom group type order (Pekerja, TA, TKJP, etc)
+            $groupOrderA = $getGroupOrder($a['group_name'] ?? '');
+            $groupOrderB = $getGroupOrder($b['group_name'] ?? '');
+            if ($groupOrderA !== $groupOrderB)
+                return $groupOrderA - $groupOrderB;
+            // Sort by full group_name for number ordering (Ramba-Pekerja-1, Ramba-Pekerja-2, etc)
+            $groupCompare = strcmp($a['group_name'] ?? '', $b['group_name'] ?? '');
+            if ($groupCompare !== 0)
+                return $groupCompare;
+            // Sort by member order within the group (the pivot order)
+            return ($a['group_member_order'] ?? 999) - ($b['group_member_order'] ?? 999);
+        });
+
+        // Create Excel
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Get form inputs for footer
+        $companyHeader = $request->input('company_header', 'PT. Brylian Indah');
+        $preparedBy = $request->input('prepared_by', '');
+        $preparedPosition = $request->input('prepared_position', '');
+        $checkedBy = $request->input('checked_by', '');
+        $checkedPosition = $request->input('checked_position', '');
+
+        // Handle logo - same as Recap export
+        $logoPath = null;
+        $selectedLogo = $request->input('selected_logo');
+
+        $logosDir = storage_path('app/public/logos');
+        if (!is_dir($logosDir)) {
+            mkdir($logosDir, 0755, true);
+        }
+
+        if ($request->hasFile('logo')) {
+            $uploadedLogo = $request->file('logo');
+            $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $uploadedLogo->getClientOriginalName());
+            $uploadedLogo->move($logosDir, $filename);
+            $logoPath = $logosDir . '/' . $filename;
+        } elseif ($selectedLogo && $selectedLogo !== 'new') {
+            $logoPath = storage_path('app/public/' . $selectedLogo);
+        }
+
+        // Add logo in top right corner (K3) if exists
+        if ($logoPath && file_exists($logoPath)) {
+            $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+            $drawing->setName('Logo');
+            $drawing->setDescription('Company Logo');
+            $drawing->setPath($logoPath);
+            $drawing->setCoordinates('K3');
+            $drawing->setHeight(60);
+            $drawing->setOffsetX(10);
+            $drawing->setWorksheet($sheet);
+        }
+
+        // Row 3: Header: DAILY MEAL SHEET in C3:L3 (centered)
+        $sheet->mergeCells("C3:L3");
+        $sheet->setCellValue("C3", 'DAILY MEAL SHEET');
+        $sheet->getStyle("C3")->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle("C3")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Row 5: Location header
+        $sheet->setCellValue("C5", "Location : " . $location);
+        $sheet->getStyle("C5")->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle("C5")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+        // Start table from row 7
+        $row = 7;
+
+        // Table headers with Date column
+        $sheet->setCellValue("C{$row}", 'No');
+        $sheet->setCellValue("D{$row}", 'Date');
+        $sheet->setCellValue("E{$row}", 'Name');
+        $sheet->setCellValue("F{$row}", 'Department');
+        $sheet->setCellValue("G{$row}", 'Status');
+        $sheet->setCellValue("H{$row}", 'Breakfast');
+        $sheet->setCellValue("I{$row}", 'Lunch');
+        $sheet->setCellValue("J{$row}", 'Dinner');
+        $sheet->setCellValue("K{$row}", 'Supper');
+        $sheet->setCellValue("L{$row}", 'Snack');
+        $sheet->getStyle("C{$row}:L{$row}")->getFont()->setBold(true);
+        $sheet->getStyle("C{$row}:L{$row}")->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFD3D3D3');
+        // Center alignment for headers
+        $sheet->getStyle("C{$row}:L{$row}")->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $headerRow = $row;
+        $row++;
+
+        // Data rows
+        $no = 1;
+        foreach ($employeeAttendance as $data) {
+            $employee = $data['employee'];
+            $formattedDate = date('d/m/Y', strtotime($data['date']));
+            $sheet->setCellValue("C{$row}", $no);
+            $sheet->setCellValue("D{$row}", $formattedDate);
+            $sheet->setCellValue("E{$row}", $employee->name ?? '-');
+            $sheet->setCellValue("F{$row}", $employee->department ?? '-');
+            $sheet->setCellValue("G{$row}", $employee->employee_status ?? '-');
+            $sheet->setCellValue("H{$row}", $data['breakfast'] ? '✓' : '');
+            $sheet->setCellValue("I{$row}", $data['lunch'] ? '✓' : '');
+            $sheet->setCellValue("J{$row}", $data['dinner'] ? '✓' : '');
+            $sheet->setCellValue("K{$row}", $data['supper'] ? '✓' : '');
+            $sheet->setCellValue("L{$row}", $data['snack'] ? '✓' : '');
+
+            // Center alignment for all data columns except Name (E)
+            $sheet->getStyle("C{$row}:D{$row}")->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("E{$row}")->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+            $sheet->getStyle("F{$row}:L{$row}")->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+            $no++;
+            $row++;
+        }
+
+        $lastDataRow = $row - 1;
+
+        // Apply thin borders to table
+        $sheet->getStyle("C{$headerRow}:L{$lastDataRow}")->getBorders()->getAllBorders()
+            ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+        // Footer - Prepared By and Checked By (1 row gap)
+        $row += 1;
+
+        $sheet->setCellValue("C{$row}", 'Prepared By:');
+        $sheet->setCellValue("J{$row}", 'Checked By:');
+        $sheet->getStyle("C{$row}")->getFont()->setBold(true);
+        $sheet->getStyle("J{$row}")->getFont()->setBold(true);
+        $row++;
+        $row++; // Empty row for signature
+        $row++;
+
+        // Names
+        $sheet->setCellValue("C{$row}", $preparedBy);
+        $sheet->setCellValue("J{$row}", $checkedBy);
+        $sheet->getStyle("C{$row}")->getFont()->setBold(true)->setUnderline(\PhpOffice\PhpSpreadsheet\Style\Font::UNDERLINE_SINGLE);
+        $sheet->getStyle("J{$row}")->getFont()->setBold(true)->setUnderline(\PhpOffice\PhpSpreadsheet\Style\Font::UNDERLINE_SINGLE);
+        $row++;
+
+        // Positions
+        $positionRow = $row;
+        $sheet->setCellValue("C{$row}", $preparedPosition);
+        $sheet->setCellValue("J{$row}", $checkedPosition);
+
+        // Calculate end row for print area (1 row below position)
+        $printEndRow = $positionRow + 1;
+
+        // Set column widths: A,B = 4, C:L = 12, M = 4
+        $sheet->getColumnDimension('A')->setWidth(4);
+        $sheet->getColumnDimension('B')->setWidth(4);
+        $sheet->getColumnDimension('C')->setWidth(6);
+        $sheet->getColumnDimension('D')->setWidth(12);
+        $sheet->getColumnDimension('E')->setWidth(25);
+        $sheet->getColumnDimension('F')->setWidth(12);
+        $sheet->getColumnDimension('G')->setWidth(12);
+        foreach (range('H', 'L') as $col) {
+            $sheet->getColumnDimension($col)->setWidth(10);
+        }
+        $sheet->getColumnDimension('M')->setWidth(4);
+
+        // Page setup
+        $sheet->getPageSetup()
+            ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4)
+            ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT)
+            ->setFitToWidth(1)
+            ->setFitToHeight(0)
+            ->setHorizontalCentered(true)
+            ->setVerticalCentered(false);
+
+        // Set print area
+        $sheet->getPageSetup()->setPrintArea("B2:M{$printEndRow}");
+
+        // Set print titles - repeat rows 2:7 at top of each page
+        $sheet->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(2, 7);
+
+        // Set narrow margins
+        $sheet->getPageMargins()
+            ->setTop(0.35)
+            ->setRight(0.25)
+            ->setBottom(0.35)
+            ->setLeft(0.25)
+            ->setHeader(0.3)
+            ->setFooter(0.3);
+
+        // Download - Format: Location_Daily_Meal Sheet_YYYYMMDD.xlsx
+        $locationName = str_replace(' ', '_', $location);
+        $filename = "{$locationName}_Daily_Meal_Sheet_" . date('Ymd', strtotime($startDate)) . ".xlsx";
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

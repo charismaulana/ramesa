@@ -11,7 +11,8 @@
             <h2 class="card-title">Export Options</h2>
         </div>
 
-        <form action="{{ route('historical.export') }}" method="GET">
+        <form action="{{ route('historical.export') }}" method="POST" enctype="multipart/form-data">
+            @csrf
             <div class="row">
                 <div class="col-6">
                     <div class="form-group">
@@ -128,6 +129,37 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label">Logo <span class="text-danger">*</span></label>
+
+                    @if(count($savedLogos) > 0)
+                        <div class="logo-gallery mb-2">
+                            @foreach($savedLogos as $index => $logo)
+                                <label class="logo-option">
+                                    <input type="radio" name="selected_logo" value="{{ $logo['path'] }}" {{ $index === 0 ? 'checked' : '' }} required>
+                                    <div class="logo-preview">
+                                        <img src="{{ $logo['url'] }}" alt="{{ $logo['filename'] }}">
+                                        <span class="logo-name">{{ $logo['filename'] }}</span>
+                                    </div>
+                                </label>
+                            @endforeach
+                            <label class="logo-option">
+                                <input type="radio" name="selected_logo" value="new" id="newLogoRadio">
+                                <div class="logo-preview upload-new">
+                                    <i class="bi bi-plus-circle"></i>
+                                    <span class="logo-name">Upload New</span>
+                                </div>
+                            </label>
+                        </div>
+                    @endif
+
+                    <div id="newLogoUpload" style="{{ count($savedLogos) > 0 ? 'display: none;' : '' }}">
+                        <input type="file" name="logo" class="form-control" accept="image/png,image/jpeg,image/jpg"
+                            id="logoFileInput" {{ count($savedLogos) === 0 ? 'required' : '' }}>
+                        <small class="text-muted">Upload a PNG/JPG logo for the export header</small>
+                    </div>
+                </div>
             </div>
 
             <div class="d-flex gap-1 mt-3">
@@ -219,6 +251,70 @@
                 margin-bottom: 0.5rem;
             }
         }
+
+        /* Logo gallery styles */
+        .logo-gallery {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .logo-option {
+            cursor: pointer;
+        }
+
+        .logo-option input {
+            display: none;
+        }
+
+        .logo-preview {
+            width: 100px;
+            height: 100px;
+            border: 2px solid var(--card-border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .logo-option input:checked+.logo-preview {
+            border-color: var(--primary);
+            background: rgba(255, 69, 0, 0.1);
+        }
+
+        .logo-preview:hover {
+            border-color: var(--primary-light);
+        }
+
+        .logo-preview img {
+            max-width: 70px;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+        .logo-preview.upload-new {
+            border-style: dashed;
+        }
+
+        .logo-preview.upload-new i {
+            font-size: 2rem;
+            color: var(--text-muted);
+        }
+
+        .logo-name {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90px;
+        }
     </style>
 @endpush
 
@@ -253,5 +349,20 @@
             });
             window.location.href = '{{ route("historical.recap-pdf") }}?' + params.toString();
         }
+
+        // Toggle new logo upload field
+        document.querySelectorAll('input[name="selected_logo"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const uploadDiv = document.getElementById('newLogoUpload');
+                const fileInput = document.getElementById('logoFileInput');
+                if (this.value === 'new') {
+                    uploadDiv.style.display = 'block';
+                    fileInput.required = true;
+                } else {
+                    uploadDiv.style.display = 'none';
+                    fileInput.required = false;
+                }
+            });
+        });
     </script>
 @endpush

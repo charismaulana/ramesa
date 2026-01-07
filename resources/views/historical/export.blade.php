@@ -86,6 +86,16 @@
                             </div>
                         </div>
                     </label>
+                    <label class="export-type-option">
+                        <input type="radio" name="export_type" value="daily">
+                        <div class="export-type-card">
+                            <div class="export-type-icon"><i class="bi bi-calendar-check"></i></div>
+                            <div class="export-type-info">
+                                <strong>Daily</strong>
+                                <p>Daily attendance checklist per employee</p>
+                            </div>
+                        </div>
+                    </label>
                 </div>
             </div>
 
@@ -326,9 +336,9 @@
                 const recapFields = document.getElementById('recapFields');
                 const pdfBtn = document.getElementById('pdfExportBtn');
 
-                if (this.value === 'recap') {
+                if (this.value === 'recap' || this.value === 'daily') {
                     recapFields.style.display = 'block';
-                    pdfBtn.style.display = 'inline-block';
+                    pdfBtn.style.display = this.value === 'recap' ? 'inline-block' : 'none';
                 } else {
                     recapFields.style.display = 'none';
                     pdfBtn.style.display = 'none';

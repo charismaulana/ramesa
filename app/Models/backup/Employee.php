@@ -73,8 +73,9 @@ class Employee extends Model
         $prefix = self::getCompanyPrefix($company);
         $date = Carbon::now();
 
-        // Get the last employee with the same prefix for today
-        $lastEmployee = self::where('employee_number', 'like', $prefix . '-PEP-%')
+        // Get the last employee with the same prefix (including soft-deleted to avoid duplicates)
+        $lastEmployee = self::withTrashed()
+            ->where('employee_number', 'like', $prefix . '-PEP-%')
             ->orderBy('employee_number', 'desc')
             ->first();
 
