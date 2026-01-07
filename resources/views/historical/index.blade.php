@@ -336,6 +336,88 @@
         </form>
     </div>
 
+    <!-- Download Absence Proofs Card -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">📄 Download Absence Proofs</h2>
+            <small style="color: var(--text-muted);">Download selected absence proof documents as ZIP</small>
+        </div>
+
+        <form action="{{ route('historical.downloadProofs') }}" method="POST" id="downloadProofsForm">
+            @csrf
+            <div class="filter-bar">
+                <div class="form-group">
+                    <label class="form-label">Start Date *</label>
+                    <input type="date" id="proof_start_date" class="form-control" value="{{ date('Y-m-01') }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">End Date *</label>
+                    <input type="date" id="proof_end_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <select id="proof_location" class="form-control">
+                        <option value="">All Locations</option>
+                        <option value="Ramba">Ramba</option>
+                        <option value="Bentayan">Bentayan</option>
+                        <option value="Keluang">Keluang</option>
+                        <option value="Mangunjaya">Mangunjaya</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="loadAbsenceProofs()">
+                        <i class="bi bi-search"></i> Load Records
+                    </button>
+                </div>
+            </div>
+
+            <div id="proofsTableContainer" style="display: none; padding: 1rem;">
+                <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="selectAllProofs" onchange="toggleAllProofs(this)">
+                        <span>Select All</span>
+                    </label>
+                    <span id="selectedProofsCount" style="color: var(--accent);">0 selected</span>
+                </div>
+
+                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;"></th>
+                                <th>Document Name</th>
+                                <th>Date</th>
+                                <th>View</th>
+                            </tr>
+                        </thead>
+                        <tbody id="proofsTableBody">
+                            <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-download"></i> Download Selected as ZIP
+                    </button>
+                </div>
+            </div>
+
+            <div id="proofsLoading" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
+                <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
+                <div>Loading records...</div>
+            </div>
+
+            <div id="proofsEmpty" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
+                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                <div>No records with absence proofs found</div>
+            </div>
+        </form>
+    </div>
+
     <!-- Recap Export Modal -->
     <div id="recapModal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center;">
@@ -442,5 +524,89 @@
 
             return confirm(message);
         }
+
+        // Absence Proofs Functions
+        let proofRecords = [];
+
+        async function loadAbsenceProofs() {
+            const startDate = document.getElementById('proof_start_date').value;
+            const endDate = document.getElementById('proof_end_date').value;
+            const location = document.getElementById('proof_location').value;
+
+            document.getElementById('proofsLoading').style.display = 'block';
+            document.getElementById('proofsTableContainer').style.display = 'none';
+            document.getElementById('proofsEmpty').style.display = 'none';
+
+            try {
+                const params = new URLSearchParams({
+                    start_date: startDate,
+                    end_date: endDate,
+                    location: location
+                });
+
+                const response = await fetch(`{{ route('historical.getProofs') }}?${params}`);
+                proofRecords = await response.json();
+
+                document.getElementById('proofsLoading').style.display = 'none';
+
+                if (proofRecords.length === 0) {
+                    document.getElementById('proofsEmpty').style.display = 'block';
+                    return;
+                }
+
+                renderProofsTable();
+                document.getElementById('proofsTableContainer').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading proofs:', error);
+                document.getElementById('proofsLoading').style.display = 'none';
+                document.getElementById('proofsEmpty').style.display = 'block';
+            }
+        }
+
+        function renderProofsTable() {
+            const tbody = document.getElementById('proofsTableBody');
+            tbody.innerHTML = '';
+
+            // API already returns unique records
+            proofRecords.forEach(record => {
+                const row = document.createElement('tr');
+                // Extract filename from path
+                const filename = record.absence_proof ? record.absence_proof.split('/').pop() : '-';
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" name="attendance_ids[]" value="${record.id}"
+                            class="proof-checkbox" onchange="updateSelectedCount()">
+                    </td>
+                    <td style="word-break: break-all;">${filename}</td>
+                    <td>${new Date(record.scanned_at).toLocaleDateString('id-ID')}</td>
+                    <td>
+                        <a href="/storage/${record.absence_proof}" target="_blank" class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updateSelectedCount();
+        }
+
+        function toggleAllProofs(checkbox) {
+            const checkboxes = document.querySelectorAll('.proof-checkbox');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.proof-checkbox:checked');
+            document.getElementById('selectedProofsCount').textContent = `${checkboxes.length} selected`;
+        }
+
+        // Load proofs on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            // Auto-load absence proofs with default date range
+            loadAbsenceProofs();
+        });
     </script>
 @endsection
