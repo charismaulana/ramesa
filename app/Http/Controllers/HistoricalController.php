@@ -281,21 +281,34 @@ class HistoricalController extends Controller
         $sheet->getStyle("C4")->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle("C4")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-        // Row 7: Provider header in C7 (left aligned)
-        $sheet->setCellValue("C7", "Provider : " . $companyHeader);
+        // Row 6: Provider header in C6 (left aligned)
+        $sheet->setCellValue("C6", "Provider : " . $companyHeader);
+        $sheet->getStyle("C6")->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle("C6")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+        // Row 7: Location header (left aligned)
+        $sheet->setCellValue("C7", "Location : " . $location);
         $sheet->getStyle("C7")->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle("C7")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 
-        // Row 8: Location header (left aligned)
-        $sheet->setCellValue("C8", "Location : " . $location);
-        $sheet->getStyle("C8")->getFont()->setBold(true)->setSize(12);
-        $sheet->getStyle("C8")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-
-        // Row 9: Date header (left aligned)
+        // Row 8: Date header (left aligned)
         $dateLabel = ($startDate == $endDate)
             ? "Tanggal: " . date('d F Y', strtotime($startDate))
             : "Periode: " . date('d F Y', strtotime($startDate)) . " - " . date('d F Y', strtotime($endDate));
-        $sheet->setCellValue("C9", $dateLabel);
+        $sheet->setCellValue("C8", $dateLabel);
+        $sheet->getStyle("C8")->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle("C8")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+        // Row 9: Total Invoice (left aligned)
+        // Calculate total invoice from attendances
+        $totalInvoice = 0;
+        foreach ($attendances as $att) {
+            $mealType = strtolower($att->meal_type);
+            if (isset($prices[$mealType])) {
+                $totalInvoice += $prices[$mealType];
+            }
+        }
+        $sheet->setCellValue("C9", "Total Invoice: Rp " . number_format($totalInvoice, 0, ',', '.'));
         $sheet->getStyle("C9")->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle("C9")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 
@@ -483,7 +496,7 @@ class HistoricalController extends Controller
         }
 
         // Footer - Prepared By and Checked By
-        $row += 2; // Add some space
+        $row += 1; // Add 1 row space
 
         // Footer - Prepared By in C, Checked By in G (shifted)
         $sheet->setCellValue("C{$row}", 'Prepared By:');
@@ -493,8 +506,8 @@ class HistoricalController extends Controller
         $sheet->getStyle("C{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
         $sheet->getStyle("G{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
         $row++;
-        $row++; // Empty row
-        $row++; // Empty row (for signature space)
+        $row++; // Empty row 1 (for signature space)
+        $row++; // Empty row 2 (for signature space)
 
         // Names (shifted to C and G)
         $sheet->setCellValue("C{$row}", $preparedBy);
@@ -512,8 +525,8 @@ class HistoricalController extends Controller
         $sheet->getStyle("C{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
         $sheet->getStyle("G{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 
-        // Thick outside border end row (2 rows below position)
-        $borderEndRow = $positionRow + 2;
+        // Thick outside border end row (1 row below position, reduced from 2)
+        $borderEndRow = $positionRow + 1;
 
         // Apply thick outside border for B:I from row 2
         $sheet->getStyle("B2:I{$borderEndRow}")->getBorders()->getOutline()
@@ -523,7 +536,8 @@ class HistoricalController extends Controller
         $sheet->getStyle("C1:H" . ($row))->getAlignment()
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-        // Re-apply left alignment to provider, location, date and signature area
+        // Re-apply left alignment to provider, location, date, and total invoice
+        $sheet->getStyle("C6")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
         $sheet->getStyle("C7")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
         $sheet->getStyle("C8")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
         $sheet->getStyle("C9")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
