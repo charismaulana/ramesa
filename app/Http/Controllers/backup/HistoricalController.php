@@ -75,7 +75,23 @@ class HistoricalController extends Controller
         $locations = Employee::distinct()->pluck('location')->filter()->values();
         $mealTypes = ['breakfast', 'lunch', 'dinner', 'supper', 'snack'];
 
-        return view('historical.export', compact('locations', 'mealTypes'));
+        // Get previously uploaded logos
+        $logoPath = storage_path('app/public/logos');
+        $savedLogos = [];
+        if (is_dir($logoPath)) {
+            $files = scandir($logoPath);
+            foreach ($files as $file) {
+                if (in_array(pathinfo($file, PATHINFO_EXTENSION), ['png', 'jpg', 'jpeg'])) {
+                    $savedLogos[] = [
+                        'filename' => $file,
+                        'path' => 'logos/' . $file,
+                        'url' => asset('storage/logos/' . $file),
+                    ];
+                }
+            }
+        }
+
+        return view('historical.export', compact('locations', 'mealTypes', 'savedLogos'));
     }
 
     public function export(Request $request)
@@ -221,39 +237,65 @@ class HistoricalController extends Controller
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        $row = 1;
-        $row++; // Empty row at top
+        // Handle logo - use selected logo or save new upload
+        $logoPath = null;
+        $selectedLogo = $request->input('selected_logo');
 
-        // Header: TOTAL MEAL (no background, center aligned)
-        $sheet->mergeCells("A{$row}:F{$row}");
-        $sheet->setCellValue("A{$row}", 'TOTAL MEAL');
-        $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(14);
-        $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $row++;
-        $row++; // Empty row
+        // Ensure logos directory exists
+        $logosDir = storage_path('app/public/logos');
+        if (!is_dir($logosDir)) {
+            mkdir($logosDir, 0755, true);
+        }
 
-        // Provider header (no background, left aligned)
-        $sheet->setCellValue("A{$row}", "Provider : " . $companyHeader);
-        $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(12);
-        $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-        $row++;
+        if ($request->hasFile('logo')) {
+            // New logo uploaded - save it first
+            $uploadedLogo = $request->file('logo');
+            $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $uploadedLogo->getClientOriginalName());
+            $uploadedLogo->move($logosDir, $filename);
+            $logoPath = $logosDir . '/' . $filename;
+        } elseif ($selectedLogo && $selectedLogo !== 'new') {
+            // Use selected logo from gallery
+            $logoPath = storage_path('app/public/' . $selectedLogo);
+        }
 
-        // Location header (no background, left aligned)
-        $sheet->mergeCells("A{$row}:F{$row}");
-        $sheet->setCellValue("A{$row}", "Location : " . $location);
-        $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(12);
-        $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-        $row++;
+        // Add logo in top right corner (H3) if exists
+        if ($logoPath && file_exists($logoPath)) {
+            $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+            $drawing->setName('Logo');
+            $drawing->setDescription('Company Logo');
+            $drawing->setPath($logoPath);
+            $drawing->setCoordinates('H3'); // Top right inside border
+            $drawing->setHeight(60);
+            $drawing->setOffsetX(10);
+            $drawing->setWorksheet($sheet);
+        }
 
-        // Date header (no background, left aligned)
-        $sheet->mergeCells("A{$row}:F{$row}");
+        // Row 4: Header: TOTAL MEAL in C4:H4 (centered)
+        $sheet->mergeCells("C4:H4");
+        $sheet->setCellValue("C4", 'TOTAL MEAL');
+        $sheet->getStyle("C4")->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle("C4")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Row 7: Provider header in C7 (left aligned)
+        $sheet->setCellValue("C7", "Provider : " . $companyHeader);
+        $sheet->getStyle("C7")->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle("C7")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+        // Row 8: Location header (left aligned)
+        $sheet->setCellValue("C8", "Location : " . $location);
+        $sheet->getStyle("C8")->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle("C8")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+        // Row 9: Date header (left aligned)
         $dateLabel = ($startDate == $endDate)
             ? "Tanggal: " . date('d F Y', strtotime($startDate))
             : "Periode: " . date('d F Y', strtotime($startDate)) . " - " . date('d F Y', strtotime($endDate));
-        $sheet->setCellValue("A{$row}", $dateLabel);
-        $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(12);
-        $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-        $row++;
+        $sheet->setCellValue("C9", $dateLabel);
+        $sheet->getStyle("C9")->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle("C9")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+        // Start data from row 11
+        $row = 11;
 
         // Department list (kept for reference, but we iterate actual departments)
         $departments = ['FM', 'PO', 'ICT', 'SCM', 'GS', 'RAM', 'HSSE'];
@@ -307,47 +349,50 @@ class HistoricalController extends Controller
             return $orderA <=> $orderB;
         });
 
+        // Track the first data row for thick outside border
+        $dataStartRow = $row;
+
         // Iterate over sorted employee statuses
         foreach ($sortedGrouped as $status => $statusDepartments) {
 
             $row++; // Empty row before section
 
-            // Status header (Light grey background)
-            $sheet->mergeCells("A{$row}:F{$row}");
-            $sheet->setCellValue("A{$row}", strtoupper($status));
-            $sheet->getStyle("A{$row}")->getFill()
+            // Status header (Light grey background) - shifted to C:H
+            $sheet->mergeCells("C{$row}:H{$row}");
+            $sheet->setCellValue("C{$row}", strtoupper($status));
+            $sheet->getStyle("C{$row}")->getFill()
                 ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                 ->getStartColor()->setARGB('FFD3D3D3');
-            $sheet->getStyle("A{$row}")->getFont()->setBold(true);
+            $sheet->getStyle("C{$row}")->getFont()->setBold(true);
             $row++;
 
-            // Column headers - Row 1: Meal names
+            // Column headers - Row 1: Meal names (shifted to C:H)
             $headerRow = $row;
-            $sheet->setCellValue("A{$row}", 'Department');
-            $sheet->setCellValue("B{$row}", 'Breakfast');
-            $sheet->setCellValue("C{$row}", 'Lunch');
-            $sheet->setCellValue("D{$row}", 'Dinner');
-            $sheet->setCellValue("E{$row}", 'Supper');
-            $sheet->setCellValue("F{$row}", 'Snack');
-            $sheet->getStyle("A{$row}:F{$row}")->getFont()->setBold(true);
+            $sheet->setCellValue("C{$row}", 'Department');
+            $sheet->setCellValue("D{$row}", 'Breakfast');
+            $sheet->setCellValue("E{$row}", 'Lunch');
+            $sheet->setCellValue("F{$row}", 'Dinner');
+            $sheet->setCellValue("G{$row}", 'Supper');
+            $sheet->setCellValue("H{$row}", 'Snack');
+            $sheet->getStyle("C{$row}:H{$row}")->getFont()->setBold(true);
             $row++;
 
-            // Column headers - Row 2: Actual prices (numeric format for summing)
+            // Column headers - Row 2: Actual prices (shifted to D:H)
             $priceRow = $row;
-            $sheet->setCellValue("B{$row}", $prices['breakfast']);
-            $sheet->setCellValue("C{$row}", $prices['lunch']);
-            $sheet->setCellValue("D{$row}", $prices['dinner']);
-            $sheet->setCellValue("E{$row}", $prices['supper']);
-            $sheet->setCellValue("F{$row}", $prices['snack']);
-            $sheet->getStyle("B{$row}:F{$row}")->getFont()->setItalic(true);
-            $sheet->getStyle("B{$row}:F{$row}")->getNumberFormat()->setFormatCode('"Rp "#,##0');
+            $sheet->setCellValue("D{$row}", $prices['breakfast']);
+            $sheet->setCellValue("E{$row}", $prices['lunch']);
+            $sheet->setCellValue("F{$row}", $prices['dinner']);
+            $sheet->setCellValue("G{$row}", $prices['supper']);
+            $sheet->setCellValue("H{$row}", $prices['snack']);
+            $sheet->getStyle("D{$row}:H{$row}")->getFont()->setItalic(true);
+            $sheet->getStyle("D{$row}:H{$row}")->getNumberFormat()->setFormatCode('"Rp "#,##0');
 
             // Merge Department cell vertically across both header rows
-            $sheet->mergeCells("A{$headerRow}:A{$priceRow}");
-            $sheet->getStyle("A{$headerRow}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            $sheet->mergeCells("C{$headerRow}:C{$priceRow}");
+            $sheet->getStyle("C{$headerRow}")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
             $row++;
 
-            // Track where this section's data starts (for borders)
+            // Track where this section's data starts (for thin borders)
             $sectionStartRow = $headerRow;
 
             // Track totals for this status
@@ -381,13 +426,13 @@ class HistoricalController extends Controller
                     continue;
                 }
 
-                // Department row - counts only (0 shown as -)
-                $sheet->setCellValue("A{$row}", $dept);
-                $sheet->setCellValue("B{$row}", $counts['breakfast'] ?: '-');
-                $sheet->setCellValue("C{$row}", $counts['lunch'] ?: '-');
-                $sheet->setCellValue("D{$row}", $counts['dinner'] ?: '-');
-                $sheet->setCellValue("E{$row}", $counts['supper'] ?: '-');
-                $sheet->setCellValue("F{$row}", $counts['snack'] ?: '-');
+                // Department row - counts only (0 shown as -) - shifted to C:H
+                $sheet->setCellValue("C{$row}", $dept);
+                $sheet->setCellValue("D{$row}", $counts['breakfast'] ?: '-');
+                $sheet->setCellValue("E{$row}", $counts['lunch'] ?: '-');
+                $sheet->setCellValue("F{$row}", $counts['dinner'] ?: '-');
+                $sheet->setCellValue("G{$row}", $counts['supper'] ?: '-');
+                $sheet->setCellValue("H{$row}", $counts['snack'] ?: '-');
                 $row++;
 
                 // Add to totals
@@ -403,95 +448,111 @@ class HistoricalController extends Controller
                 $statusTotals['snack_price'] += $counts['snack'] * $prices['snack'];
             }
 
-            // Status totals row (0 shown as -)
-            $sheet->setCellValue("A{$row}", 'Total Person');
-            $sheet->setCellValue("B{$row}", $statusTotals['breakfast_count'] ?: '-');
-            $sheet->setCellValue("C{$row}", $statusTotals['lunch_count'] ?: '-');
-            $sheet->setCellValue("D{$row}", $statusTotals['dinner_count'] ?: '-');
-            $sheet->setCellValue("E{$row}", $statusTotals['supper_count'] ?: '-');
-            $sheet->setCellValue("F{$row}", $statusTotals['snack_count'] ?: '-');
-            $sheet->getStyle("A{$row}:F{$row}")->getFont()->setBold(true);
+            // Status totals row (0 shown as -) - shifted to C:H
+            $sheet->setCellValue("C{$row}", 'Total Person');
+            $sheet->setCellValue("D{$row}", $statusTotals['breakfast_count'] ?: '-');
+            $sheet->setCellValue("E{$row}", $statusTotals['lunch_count'] ?: '-');
+            $sheet->setCellValue("F{$row}", $statusTotals['dinner_count'] ?: '-');
+            $sheet->setCellValue("G{$row}", $statusTotals['supper_count'] ?: '-');
+            $sheet->setCellValue("H{$row}", $statusTotals['snack_count'] ?: '-');
+            $sheet->getStyle("C{$row}:H{$row}")->getFont()->setBold(true);
             $row++;
 
-            // Total price row - use numbers so Excel can sum them
-            $sheet->setCellValue("A{$row}", 'Total Price');
-            $sheet->setCellValue("B{$row}", $statusTotals['breakfast_price'] ?: '-');
-            $sheet->setCellValue("C{$row}", $statusTotals['lunch_price'] ?: '-');
-            $sheet->setCellValue("D{$row}", $statusTotals['dinner_price'] ?: '-');
-            $sheet->setCellValue("E{$row}", $statusTotals['supper_price'] ?: '-');
-            $sheet->setCellValue("F{$row}", $statusTotals['snack_price'] ?: '-');
-            $sheet->getStyle("A{$row}:F{$row}")->getFont()->setBold(true);
-            // Format as currency with Rp prefix (allows Excel to sum)
-            $sheet->getStyle("B{$row}:F{$row}")->getNumberFormat()->setFormatCode('"Rp "#,##0');
+            // Total price row - shifted to C:H
+            $sheet->setCellValue("C{$row}", 'Total Price');
+            $sheet->setCellValue("D{$row}", $statusTotals['breakfast_price'] ?: '-');
+            $sheet->setCellValue("E{$row}", $statusTotals['lunch_price'] ?: '-');
+            $sheet->setCellValue("F{$row}", $statusTotals['dinner_price'] ?: '-');
+            $sheet->setCellValue("G{$row}", $statusTotals['supper_price'] ?: '-');
+            $sheet->setCellValue("H{$row}", $statusTotals['snack_price'] ?: '-');
+            $sheet->getStyle("C{$row}:H{$row}")->getFont()->setBold(true);
+            // Format as currency with Rp prefix
+            $sheet->getStyle("D{$row}:H{$row}")->getNumberFormat()->setFormatCode('"Rp "#,##0');
 
-            // Apply borders only to this status section's data area
+            // Apply thin borders to this status section's data area
             $sectionEndRow = $row;
-            $sheet->getStyle("A{$sectionStartRow}:F{$sectionEndRow}")->getBorders()->getAllBorders()
+            $sheet->getStyle("C{$sectionStartRow}:H{$sectionEndRow}")->getBorders()->getAllBorders()
                 ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
 
             $row++;
         }
 
-
-        // Center align all content
-        $sheet->getStyle("A1:F" . ($row - 1))->getAlignment()
-            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-        // Re-apply left alignment to provider (row 4), location (row 5), and date (row 6)
-        $sheet->getStyle("A4")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-        $sheet->getStyle("A5")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-        $sheet->getStyle("A6")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-
-        // Set fixed column width to 15 for all columns
-        foreach (range('A', 'F') as $col) {
-            $sheet->getColumnDimension($col)->setWidth(15);
-        }
-
-        // Page setup for printing
-        $sheet->getPageSetup()
-            ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4)
-            ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT)
-            ->setFitToWidth(1)
-            ->setFitToHeight(1); // Fit on one page
-
-        // Set print area to columns A-F
-        $lastRow = $row + 10; // Add buffer for footer
-        $sheet->getPageSetup()->setPrintArea("A1:F{$lastRow}");
-
-        // Set print area margins
-        $sheet->getPageMargins()
-            ->setTop(0.5)
-            ->setRight(0.5)
-            ->setBottom(0.5)
-            ->setLeft(0.5);
-
         // Footer - Prepared By and Checked By
         $row += 2; // Add some space
 
-        $sheet->setCellValue("A{$row}", 'Prepared By:');
-        $sheet->setCellValue("E{$row}", 'Checked By:');
-        $sheet->getStyle("A{$row}")->getFont()->setBold(true);
-        $sheet->getStyle("E{$row}")->getFont()->setBold(true);
-        $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-        $sheet->getStyle("E{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        // Footer - Prepared By in C, Checked By in G (shifted)
+        $sheet->setCellValue("C{$row}", 'Prepared By:');
+        $sheet->setCellValue("G{$row}", 'Checked By:');
+        $sheet->getStyle("C{$row}")->getFont()->setBold(true);
+        $sheet->getStyle("G{$row}")->getFont()->setBold(true);
+        $sheet->getStyle("C{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle("G{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
         $row++;
         $row++; // Empty row
         $row++; // Empty row (for signature space)
 
-        // Names
-        $sheet->setCellValue("A{$row}", $preparedBy);
-        $sheet->setCellValue("E{$row}", $checkedBy);
-        $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setUnderline(\PhpOffice\PhpSpreadsheet\Style\Font::UNDERLINE_SINGLE);
-        $sheet->getStyle("E{$row}")->getFont()->setBold(true)->setUnderline(\PhpOffice\PhpSpreadsheet\Style\Font::UNDERLINE_SINGLE);
-        $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-        $sheet->getStyle("E{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        // Names (shifted to C and G)
+        $sheet->setCellValue("C{$row}", $preparedBy);
+        $sheet->setCellValue("G{$row}", $checkedBy);
+        $sheet->getStyle("C{$row}")->getFont()->setBold(true)->setUnderline(\PhpOffice\PhpSpreadsheet\Style\Font::UNDERLINE_SINGLE);
+        $sheet->getStyle("G{$row}")->getFont()->setBold(true)->setUnderline(\PhpOffice\PhpSpreadsheet\Style\Font::UNDERLINE_SINGLE);
+        $sheet->getStyle("C{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle("G{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
         $row++;
 
-        // Positions
-        $sheet->setCellValue("A{$row}", $preparedPosition);
-        $sheet->setCellValue("E{$row}", $checkedPosition);
-        $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-        $sheet->getStyle("E{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        // Positions (shifted to C and G)
+        $positionRow = $row;
+        $sheet->setCellValue("C{$row}", $preparedPosition);
+        $sheet->setCellValue("G{$row}", $checkedPosition);
+        $sheet->getStyle("C{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle("G{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+        // Thick outside border end row (2 rows below position)
+        $borderEndRow = $positionRow + 2;
+
+        // Apply thick outside border for B:I from row 2
+        $sheet->getStyle("B2:I{$borderEndRow}")->getBorders()->getOutline()
+            ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THICK);
+
+        // Center align all content in C:H
+        $sheet->getStyle("C1:H" . ($row))->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Re-apply left alignment to provider, location, date and signature area
+        $sheet->getStyle("C7")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle("C8")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle("C9")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+        // Set column widths: A,B,I,J,K = 4, C:H = 15
+        $sheet->getColumnDimension('A')->setWidth(4);
+        $sheet->getColumnDimension('B')->setWidth(4);
+        foreach (range('C', 'H') as $col) {
+            $sheet->getColumnDimension($col)->setWidth(15);
+        }
+        $sheet->getColumnDimension('I')->setWidth(4);
+        $sheet->getColumnDimension('J')->setWidth(4);
+        $sheet->getColumnDimension('K')->setWidth(4);
+
+        // Page setup for printing with centering
+        $sheet->getPageSetup()
+            ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4)
+            ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT)
+            ->setFitToWidth(1)
+            ->setFitToHeight(1) // Fit on one page
+            ->setHorizontalCentered(true)  // Center horizontally on page
+            ->setVerticalCentered(true);   // Center vertically on page
+
+        // Set print area to columns B-I
+        $sheet->getPageSetup()->setPrintArea("B1:I{$borderEndRow}");
+
+        // Set narrow margins (in inches): Top/Bottom 0.75, Left/Right 0.25, Header/Footer 0.3
+        $sheet->getPageMargins()
+            ->setTop(0.75)
+            ->setRight(0.25)
+            ->setBottom(0.75)
+            ->setLeft(0.25)
+            ->setHeader(0.3)
+            ->setFooter(0.3);
 
         // Download
         $filename = "Meal_Recap_{$location}_" . date('Ymd', strtotime($startDate)) . ".xlsx";
