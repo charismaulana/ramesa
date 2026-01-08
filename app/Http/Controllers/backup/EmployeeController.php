@@ -61,6 +61,9 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
     {
+        // Check if this is a quick add request (AJAX)
+        $isQuickAdd = $request->input('quick_add') || $request->expectsJson();
+
         $validated = $request->validate([
             'employee_number' => 'nullable|string|max:50|unique:employees',
             'name' => 'required|string|max:255',
@@ -78,7 +81,16 @@ class EmployeeController extends Controller
             $validated['employee_number'] = Employee::generateEmployeeNumber($validated['company'] ?? null);
         }
 
-        Employee::create($validated);
+        $employee = Employee::create($validated);
+
+        // Return JSON for quick add requests
+        if ($isQuickAdd) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee created successfully',
+                'employee' => $employee
+            ]);
+        }
 
         return redirect()->route('employees.index')
             ->with('success', 'Employee created successfully. QR code generated automatically.');
