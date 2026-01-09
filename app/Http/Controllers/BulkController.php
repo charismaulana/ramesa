@@ -57,6 +57,13 @@ class BulkController extends Controller
         $successCount = 0;
         $skippedCount = 0;
         $skippedRecords = []; // Track details of skipped records
+        $mealCounts = [
+            'breakfast' => 0,
+            'lunch' => 0,
+            'dinner' => 0,
+            'supper' => 0,
+            'snack' => 0,
+        ];
 
         // Handle file upload or existing file selection
         $absenceProofPath = null;
@@ -145,6 +152,7 @@ class BulkController extends Controller
                 ]);
 
                 $successCount++;
+                $mealCounts[$mealType]++;
             }
 
             // Auto-add snack if dinner was selected but snack wasn't
@@ -165,11 +173,23 @@ class BulkController extends Controller
                         'absence_proof' => $absenceProofPath,
                     ]);
                     $successCount++;
+                    $mealCounts['snack']++;
                 }
             }
         }
 
+        // Build meal breakdown string
+        $mealBreakdown = [];
+        foreach ($mealCounts as $type => $count) {
+            if ($count > 0) {
+                $mealBreakdown[] = "{$count} " . ucfirst($type);
+            }
+        }
+
         $message = "Bulk input completed: {$successCount} records created";
+        if (!empty($mealBreakdown)) {
+            $message .= " (" . implode(', ', $mealBreakdown) . ")";
+        }
         if ($skippedCount > 0) {
             $message .= ", {$skippedCount} skipped (duplicates)";
         }

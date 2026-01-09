@@ -56,6 +56,7 @@ class BulkController extends Controller
         $overrideLocation = $validated['location'] ?? null;
         $successCount = 0;
         $skippedCount = 0;
+        $skippedRecords = []; // Track details of skipped records
 
         // Handle file upload or existing file selection
         $absenceProofPath = null;
@@ -110,6 +111,15 @@ class BulkController extends Controller
 
                 if ($exists) {
                     $skippedCount++;
+                    $location = $overrideLocation ?? $employee->location;
+                    $skippedRecords[] = [
+                        'employee_name' => $employee->name,
+                        'employee_number' => $employee->employee_number,
+                        'location' => $location,
+                        'meal_type' => ucfirst($mealType),
+                        'date' => $date->format('d/m/Y'),
+                        'reason' => 'Duplicate'
+                    ];
                     continue;
                 }
 
@@ -164,7 +174,9 @@ class BulkController extends Controller
             $message .= ", {$skippedCount} skipped (duplicates)";
         }
 
-        return redirect()->route('bulk.index')->with('success', $message);
+        return redirect()->route('bulk.index')
+            ->with('success', $message)
+            ->with('skipped_records', $skippedRecords);
     }
 }
 
