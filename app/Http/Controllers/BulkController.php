@@ -54,6 +54,16 @@ class BulkController extends Controller
         $date = Carbon::parse($validated['date']);
         $recordedBy = $validated['recorded_by'];
         $overrideLocation = $validated['location'] ?? null;
+
+        // Check if date is locked (only applies to non-super_admin users)
+        if (!auth()->user()->isSuperAdmin()) {
+            if (\App\Models\LockedPeriod::isDateLocked($date, $overrideLocation)) {
+                return redirect()->back()
+                    ->with('error', 'Cannot add attendance: This date period is locked by administrator.')
+                    ->withInput();
+            }
+        }
+
         $successCount = 0;
         $skippedCount = 0;
         $skippedRecords = []; // Track details of skipped records

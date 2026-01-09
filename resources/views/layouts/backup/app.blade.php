@@ -994,7 +994,60 @@
             <div class="alert alert-success">
                 <i class="bi bi-check-circle"></i>
                 {{ session('success') }}
+                @if(session('skipped_records') && count(session('skipped_records')) > 0)
+                    <button type="button" onclick="toggleSkippedRecords()" class="btn btn-sm btn-secondary"
+                        style="margin-left: 1rem;">
+                        <i class="bi bi-eye"></i> View Skipped Records
+                    </button>
+                @endif
             </div>
+
+            @if(session('skipped_records') && count(session('skipped_records')) > 0)
+                <div class="card" id="skipped-records-card" style="display: none;">
+                    <div class="card-header">
+                        <h2 class="card-title">Skipped Records ({{ count(session('skipped_records')) }})</h2>
+                        <button type="button" onclick="toggleSkippedRecords()" class="btn btn-secondary btn-sm">
+                            <i class="bi bi-x"></i> Close
+                        </button>
+                    </div>
+                    <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Employee Number</th>
+                                    <th>Employee Name</th>
+                                    <th>Location</th>
+                                    <th>Meal Type</th>
+                                    <th>Date</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach(session('skipped_records') as $index => $record)
+                                    <tr>
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ $record['employee_number'] }}</td>
+                                        <td>{{ $record['employee_name'] }}</td>
+                                        <td>{{ $record['location'] ?? '-' }}</td>
+                                        <td>{{ $record['meal_type'] }}</td>
+                                        <td>{{ $record['date'] }}</td>
+                                        <td><span class="badge badge-warning">{{ $record['reason'] }}</span></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <script>
+                    function toggleSkippedRecords() {
+                        const card = document.getElementById('skipped-records-card');
+                        if (card) {
+                            card.style.display = card.style.display === 'none' ? 'block' : 'none';
+                        }
+                    }
+                </script>
+            @endif
         @endif
 
         @if(session('error'))

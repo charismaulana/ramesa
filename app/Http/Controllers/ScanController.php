@@ -39,6 +39,17 @@ class ScanController extends Controller
             ], 400);
         }
 
+        // Check if date is locked (only applies to non-super_admin users)
+        $location = $validated['location'] ?? $employee->location;
+        if (!auth()->user()->isSuperAdmin()) {
+            if (\App\Models\LockedPeriod::isDateLocked(Carbon::today(), $location)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot scan: This date period is locked by administrator.',
+                ], 403);
+            }
+        }
+
         // Check for duplicate scan within the same meal period
         $recentScan = Attendance::where('employee_id', $employee->id)
             ->where('meal_type', $validated['meal_type'])
@@ -54,7 +65,6 @@ class ScanController extends Controller
         }
 
         // Record the attendance
-        $location = $validated['location'] ?? $employee->location; // Use manual location or employee's home base
 
         Attendance::create([
             'employee_id' => $employee->id,
@@ -100,6 +110,14 @@ class ScanController extends Controller
         }
 
         $scannedAt = $validated['scanned_at'] ?? Carbon::now();
+        $location = $validated['location'] ?? $employee->location;
+
+        // Check if date is locked (only applies to non-super_admin users)
+        if (!auth()->user()->isSuperAdmin()) {
+            if (\App\Models\LockedPeriod::isDateLocked(Carbon::parse($scannedAt), $location)) {
+                return back()->with('error', 'Cannot add attendance: This date period is locked by administrator.');
+            }
+        }
 
         // Check for duplicate
         $existingScan = Attendance::where('employee_id', $employee->id)
@@ -111,7 +129,7 @@ class ScanController extends Controller
             return back()->with('error', 'Already recorded for ' . $validated['meal_type'] . ' on this date');
         }
 
-        $location = $validated['location'] ?? $employee->location; // Use manual location or employee's home base
+
 
         Attendance::create([
             'employee_id' => $validated['employee_id'],

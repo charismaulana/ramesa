@@ -207,6 +207,12 @@
                             @if(auth()->user()->canAccessFullFeatures())
                                 <td>
                                     <div style="display: flex; gap: 0.5rem;">
+                                        <a href="{{ route('historical.bulkEditForm', ['employee_id' => $attendance->employee_id, 'date' => $attendance->scanned_at->format('Y-m-d')]) }}"
+                                            class="btn btn-sm"
+                                            style="background: rgba(128, 0, 255, 0.2); color: #a855f7; border: 1px solid rgba(128, 0, 255, 0.3);"
+                                            title="Bulk Edit All Meals">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
                                         <a href="{{ route('historical.edit', $attendance->id) }}" class="btn btn-secondary btn-sm"
                                             title="Edit">
                                             <i class="bi bi-pencil"></i>
@@ -574,18 +580,18 @@
                 // Extract filename from path
                 const filename = record.absence_proof ? record.absence_proof.split('/').pop() : '-';
                 row.innerHTML = `
-                    <td>
-                        <input type="checkbox" name="attendance_ids[]" value="${record.id}"
-                            class="proof-checkbox" onchange="updateSelectedCount()">
-                    </td>
-                    <td style="word-break: break-all;">${filename}</td>
-                    <td>${new Date(record.scanned_at).toLocaleDateString('id-ID')}</td>
-                    <td>
-                        <a href="/storage/${record.absence_proof}" target="_blank" class="btn btn-primary btn-sm">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                    </td>
-                `;
+                        <td>
+                            <input type="checkbox" name="attendance_ids[]" value="${record.id}"
+                                class="proof-checkbox" onchange="updateSelectedCount()">
+                        </td>
+                        <td style="word-break: break-all;">${filename}</td>
+                        <td>${new Date(record.scanned_at).toLocaleDateString('id-ID')}</td>
+                        <td>
+                            <a href="/storage/${record.absence_proof}" target="_blank" class="btn btn-primary btn-sm">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    `;
                 tbody.appendChild(row);
             });
 

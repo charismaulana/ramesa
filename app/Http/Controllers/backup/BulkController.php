@@ -111,18 +111,17 @@ class BulkController extends Controller
 
             foreach ($entry['meals'] as $mealType) {
                 // Check for duplicate
-                $exists = Attendance::where('employee_id', $employee->id)
+                $existingAttendance = Attendance::where('employee_id', $employee->id)
                     ->where('meal_type', $mealType)
                     ->whereDate('scanned_at', $date->toDateString())
-                    ->exists();
+                    ->first();
 
-                if ($exists) {
+                if ($existingAttendance) {
                     $skippedCount++;
-                    $location = $overrideLocation ?? $employee->location;
                     $skippedRecords[] = [
                         'employee_name' => $employee->name,
                         'employee_number' => $employee->employee_number,
-                        'location' => $location,
+                        'location' => $existingAttendance->location, // Show location from existing record
                         'meal_type' => ucfirst($mealType),
                         'date' => $date->format('d/m/Y'),
                         'reason' => 'Duplicate'

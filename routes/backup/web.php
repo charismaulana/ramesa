@@ -75,6 +75,12 @@ Route::middleware(['auth', 'role'])->group(function () {
 
         // Bulk delete attendance route
         Route::post('/historical/bulk-delete', [HistoricalController::class, 'bulkDelete'])->name('historical.bulkDelete');
+
+        // Download absence proofs as zip
+        Route::post('/historical/download-proofs', [HistoricalController::class, 'downloadAbsenceProofs'])->name('historical.downloadProofs');
+
+        // Get absence proofs API
+        Route::get('/historical/absence-proofs', [HistoricalController::class, 'getAbsenceProofs'])->name('historical.getProofs');
     });
 
     // Super Admin only routes

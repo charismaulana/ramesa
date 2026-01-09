@@ -992,4 +992,95 @@ class HistoricalController extends Controller
 
         return back()->with('success', $message);
     }
+
+    public function getAbsenceProofs(Request $request)
+    {
+        $startDate = $request->input('start_date', date('Y-m-01'));
+        $endDate = $request->input('end_date', date('Y-m-d'));
+        $location = $request->input('location', '');
+
+        $query = Attendance::with('employee')
+            ->whereDate('scanned_at', '>=', $startDate)
+            ->whereDate('scanned_at', '<=', $endDate)
+            ->whereNotNull('absence_proof')
+            ->where('absence_proof', '!=', '');
+
+        if ($location) {
+            $query->where('location', $location);
+        }
+
+        // Get unique absence_proof values
+        $attendances = $query->orderBy('scanned_at', 'desc')->get();
+
+        // Filter to get only unique absence_proof paths
+        $uniqueProofs = $attendances->unique('absence_proof')->values();
+
+        return response()->json($uniqueProofs);
+    }
+
+    public function downloadAbsenceProofs(Request $request)
+    {
+        $ids = $request->input('attendance_ids', []);
+
+        if (empty($ids)) {
+            return back()->with('error', 'No attendance records selected.');
+        }
+
+        // Get attendances with absence_proof
+        $attendances = Attendance::with('employee')
+            ->whereIn('id', $ids)
+            ->whereNotNull('absence_proof')
+            ->where('absence_proof', '!=', '')
+            ->get();
+
+        if ($attendances->isEmpty()) {
+            return back()->with('error', 'No absence proofs found for selected records.');
+        }
+
+        // Create zip file
+        $zipFileName = 'absence_proofs_' . date('Ymd_His') . '.zip';
+        $zipPath = storage_path('app/temp/' . $zipFileName);
+
+        // Ensure temp directory exists
+        if (!is_dir(storage_path('app/temp'))) {
+            mkdir(storage_path('app/temp'), 0755, true);
+        }
+
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return back()->with('error', 'Failed to create zip file.');
+        }
+
+        $filesAdded = 0;
+        foreach ($attendances as $attendance) {
+            $proofPath = storage_path('app/public/' . $attendance->absence_proof);
+
+            if (file_exists($proofPath)) {
+                // Use original filename from the path
+                $zipEntryName = basename($attendance->absence_proof);
+
+                // Handle duplicate filenames
+                $counter = 1;
+                $originalName = $zipEntryName;
+                $extension = pathinfo($proofPath, PATHINFO_EXTENSION);
+                $baseName = pathinfo($originalName, PATHINFO_FILENAME);
+                while ($zip->locateName($zipEntryName) !== false) {
+                    $zipEntryName = "{$baseName}_{$counter}.{$extension}";
+                    $counter++;
+                }
+
+                $zip->addFile($proofPath, $zipEntryName);
+                $filesAdded++;
+            }
+        }
+
+        $zip->close();
+
+        if ($filesAdded === 0) {
+            unlink($zipPath);
+            return back()->with('error', 'No valid absence proof files found.');
+        }
+
+        return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+    }
 }

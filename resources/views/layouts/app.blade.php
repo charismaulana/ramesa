@@ -950,12 +950,22 @@
                     </div>
                 </li>
                 @if(auth()->user()->isSuperAdmin())
-                    <li>
-                        <a href="{{ route('admin.users') }}"
-                            class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}">
+                    <li class="nav-dropdown">
+                        <a href="#" class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}">
                             <i class="bi bi-shield-lock"></i>
                             Admin
+                            <i class="bi bi-chevron-down" style="font-size: 0.8rem;"></i>
                         </a>
+                        <div class="dropdown-menu">
+                            <a href="{{ route('admin.users') }}" class="dropdown-item">
+                                <i class="bi bi-people"></i>
+                                User Management
+                            </a>
+                            <a href="{{ route('admin.lockedPeriods') }}" class="dropdown-item">
+                                <i class="bi bi-lock"></i>
+                                Lock Periods
+                            </a>
+                        </div>
                     </li>
                 @endif
             </ul>
