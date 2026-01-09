@@ -47,7 +47,7 @@ class BulkController extends Controller
             'existing_proof' => 'nullable|string', // Path to existing file
             'entries' => 'required|array|min:1|max:200',
             'entries.*.employee_id' => 'required|exists:employees,id',
-            'entries.*.meals' => 'required|array|min:1',
+            'entries.*.meals' => 'nullable|array', // Allow empty meals - will be skipped
             'entries.*.meals.*' => 'in:breakfast,lunch,dinner,supper,snack',
         ]);
 
@@ -88,6 +88,11 @@ class BulkController extends Controller
         }
 
         foreach ($validated['entries'] as $entry) {
+            // Skip entries with no meals selected
+            if (empty($entry['meals'])) {
+                continue;
+            }
+
             $employee = Employee::find($entry['employee_id']);
 
             if (!$employee || $employee->active_status !== 'active') {
