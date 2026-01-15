@@ -98,10 +98,10 @@
                             </a>
                         </th>
                         <th>
-                            <a href="{{ route('employees.index', array_merge(request()->all(), ['sort_by' => 'company', 'sort_dir' => ($sortBy == 'company' && $sortDir == 'asc') ? 'desc' : 'asc'])) }}"
-                                class="sortable {{ $sortBy == 'company' ? 'active' : '' }}">
-                                Company
-                                @if($sortBy == 'company')
+                            <a href="{{ route('employees.index', array_merge(request()->all(), ['sort_by' => 'group', 'sort_dir' => ($sortBy == 'group' && $sortDir == 'asc') ? 'desc' : 'asc'])) }}"
+                                class="sortable {{ $sortBy == 'group' ? 'active' : '' }}">
+                                Group
+                                @if($sortBy == 'group')
                                     <i class="bi bi-chevron-{{ $sortDir == 'asc' ? 'up' : 'down' }}"></i>
                                 @endif
                             </a>
@@ -150,7 +150,13 @@
                         <tr>
                             <td>{{ $employee->employee_number }}</td>
                             <td>{{ $employee->name }}</td>
-                            <td>{{ $employee->company ?? '-' }}</td>
+                            <td>
+                                @if($employee->groups->count() > 0)
+                                    {{ $employee->groups->pluck('name')->join(', ') }}
+                                @else
+                                    <span style="color: var(--text-muted);">-</span>
+                                @endif
+                            </td>
                             <td>{{ $employee->department ?? '-' }}</td>
                             <td>{{ $employee->location ?? '-' }}</td>
                             <td>{{ $employee->employee_status ?? '-' }}</td>

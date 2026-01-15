@@ -125,6 +125,15 @@
                             </a>
                         </th>
                         <th>
+                            <a href="{{ route('employees.index', array_merge(request()->all(), ['sort_by' => 'accommodation', 'sort_dir' => ($sortBy == 'accommodation' && $sortDir == 'asc') ? 'desc' : 'asc'])) }}"
+                                class="sortable {{ $sortBy == 'accommodation' ? 'active' : '' }}">
+                                Accommodation
+                                @if($sortBy == 'accommodation')
+                                    <i class="bi bi-chevron-{{ $sortDir == 'asc' ? 'up' : 'down' }}"></i>
+                                @endif
+                            </a>
+                        </th>
+                        <th>
                             <a href="{{ route('employees.index', array_merge(request()->all(), ['sort_by' => 'employee_status', 'sort_dir' => ($sortBy == 'employee_status' && $sortDir == 'asc') ? 'desc' : 'asc'])) }}"
                                 class="sortable {{ $sortBy == 'employee_status' ? 'active' : '' }}">
                                 Emp Status
@@ -159,6 +168,21 @@
                             </td>
                             <td>{{ $employee->department ?? '-' }}</td>
                             <td>{{ $employee->location ?? '-' }}</td>
+                            <td>
+                                @if($employee->accommodation && count($employee->accommodation) > 0)
+                                    @php
+                                        $rooms = [];
+                                        foreach($employee->accommodation as $loc => $room) {
+                                            if(!empty($room)) {
+                                                $rooms[] = strtoupper(substr($loc, 0, 1)) . ': ' . $room;
+                                            }
+                                        }
+                                    @endphp
+                                    {{ implode(', ', $rooms) ?: '-' }}
+                                @else
+                                    <span style="color: var(--text-muted);">-</span>
+                                @endif
+                            </td>
                             <td>{{ $employee->employee_status ?? '-' }}</td>
                             <td>
                                 <span

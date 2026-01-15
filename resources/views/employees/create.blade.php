@@ -90,9 +90,33 @@
                         </div>
                         <div class="col-6">
                             <div class="form-group">
-                                <label class="form-label" for="accommodation">Accommodation</label>
-                                <input type="text" name="accommodation" id="accommodation" class="form-control"
-                                    value="{{ old('accommodation') }}" placeholder="e.g., Camp 1">
+                                <label class="form-label">Accommodation (Room per Location)</label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                    <div>
+                                        <input type="text" name="accommodation[Ramba]" class="form-control"
+                                            placeholder="Ramba Room" value="{{ old('accommodation.Ramba') }}"
+                                            style="font-size: 0.85rem;">
+                                        <small style="color: var(--text-muted);">Ramba</small>
+                                    </div>
+                                    <div>
+                                        <input type="text" name="accommodation[Mangunjaya]" class="form-control"
+                                            placeholder="Mangunjaya Room" value="{{ old('accommodation.Mangunjaya') }}"
+                                            style="font-size: 0.85rem;">
+                                        <small style="color: var(--text-muted);">Mangunjaya</small>
+                                    </div>
+                                    <div>
+                                        <input type="text" name="accommodation[Keluang]" class="form-control"
+                                            placeholder="Keluang Room" value="{{ old('accommodation.Keluang') }}"
+                                            style="font-size: 0.85rem;">
+                                        <small style="color: var(--text-muted);">Keluang</small>
+                                    </div>
+                                    <div>
+                                        <input type="text" name="accommodation[Bentayan]" class="form-control"
+                                            placeholder="Bentayan Room" value="{{ old('accommodation.Bentayan') }}"
+                                            style="font-size: 0.85rem;">
+                                        <small style="color: var(--text-muted);">Bentayan</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

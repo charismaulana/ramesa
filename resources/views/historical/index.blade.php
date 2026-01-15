@@ -2,26 +2,26 @@
 
 @section('content')
     <div class="page-header">
-        <h1 class="page-title">MEALS HISTORICAL</h1>
-        <p class="page-subtitle">View meal attendance records</p>
+        <h1 class="page-title">{{ __('messages.meals_historical') }}</h1>
+        <p class="page-subtitle">{{ __('messages.view_meal_attendance') }}</p>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">Filters</h2>
+            <h2 class="card-title">{{ __('messages.filters') }}</h2>
         </div>
 
         <form action="{{ route('historical.index') }}" method="GET" class="filter-bar">
             <div class="form-group" style="flex: 1; min-width: 200px;">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Employee name or ID..."
+                <label class="form-label">{{ __('messages.search') }}</label>
+                <input type="text" name="search" class="form-control" placeholder="{{ __('messages.employee_name_or_id') }}"
                     value="{{ request('search') }}">
             </div>
 
             <div class="form-group">
-                <label class="form-label">Department</label>
+                <label class="form-label">{{ __('messages.department') }}</label>
                 <select name="department" class="form-control">
-                    <option value="">All Departments</option>
+                    <option value="">{{ __('messages.all_departments') }}</option>
                     <option value="GS" {{ request('department') == 'GS' ? 'selected' : '' }}>GS</option>
                     <option value="ICT" {{ request('department') == 'ICT' ? 'selected' : '' }}>ICT</option>
                     <option value="SCM" {{ request('department') == 'SCM' ? 'selected' : '' }}>SCM</option>
@@ -39,9 +39,9 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Location</label>
+                <label class="form-label">{{ __('messages.location') }}</label>
                 <select name="location" class="form-control">
-                    <option value="">All Locations</option>
+                    <option value="">{{ __('messages.all_locations') }}</option>
                     <option value="Ramba" {{ request('location') == 'Ramba' ? 'selected' : '' }}>Ramba</option>
                     <option value="Bentayan" {{ request('location') == 'Bentayan' ? 'selected' : '' }}>Bentayan</option>
                     <option value="Keluang" {{ request('location') == 'Keluang' ? 'selected' : '' }}>Keluang</option>
@@ -50,35 +50,40 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Meal Type</label>
+                <label class="form-label">{{ __('messages.meal_type') }}</label>
                 <select name="meal_type" class="form-control">
-                    <option value="">All Meals</option>
-                    <option value="breakfast" {{ request('meal_type') == 'breakfast' ? 'selected' : '' }}>Breakfast</option>
-                    <option value="lunch" {{ request('meal_type') == 'lunch' ? 'selected' : '' }}>Lunch</option>
-                    <option value="dinner" {{ request('meal_type') == 'dinner' ? 'selected' : '' }}>Dinner</option>
-                    <option value="supper" {{ request('meal_type') == 'supper' ? 'selected' : '' }}>Supper</option>
-                    <option value="snack" {{ request('meal_type') == 'snack' ? 'selected' : '' }}>Snack</option>
+                    <option value="">{{ __('messages.all_meals') }}</option>
+                    <option value="breakfast" {{ request('meal_type') == 'breakfast' ? 'selected' : '' }}>
+                        {{ __('messages.breakfast') }}</option>
+                    <option value="lunch" {{ request('meal_type') == 'lunch' ? 'selected' : '' }}>{{ __('messages.lunch') }}
+                    </option>
+                    <option value="dinner" {{ request('meal_type') == 'dinner' ? 'selected' : '' }}>
+                        {{ __('messages.dinner') }}</option>
+                    <option value="supper" {{ request('meal_type') == 'supper' ? 'selected' : '' }}>
+                        {{ __('messages.supper') }}</option>
+                    <option value="snack" {{ request('meal_type') == 'snack' ? 'selected' : '' }}>{{ __('messages.snack') }}
+                    </option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Start Date</label>
+                <label class="form-label">{{ __('messages.start_date') }}</label>
                 <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
             </div>
 
             <div class="form-group">
-                <label class="form-label">End Date</label>
+                <label class="form-label">{{ __('messages.end_date') }}</label>
                 <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
             </div>
 
             <div class="d-flex gap-1">
                 <button type="submit" class="btn btn-primary btn-sm">
                     <i class="bi bi-search"></i>
-                    Search
+                    {{ __('messages.search') }}
                 </button>
                 <a href="{{ route('historical.index') }}" class="btn btn-secondary btn-sm">
                     <i class="bi bi-x-lg"></i>
-                    Clear
+                    {{ __('messages.clear') }}
                 </a>
             </div>
         </form>
@@ -86,7 +91,7 @@
 
     <div class="card">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h2 class="card-title">Attendance Records
+            <h2 class="card-title">{{ __('messages.attendance_records') }}
                 ({{ $attendances->total() }})</h2>
         </div>
 
@@ -97,19 +102,19 @@
                         <th>
                             <a href="{{ route('historical.index', array_merge(request()->all(), ['sort_by' => 'scanned_at', 'sort_dir' => ($sortBy == 'scanned_at' && $sortDir == 'desc') ? 'asc' : 'desc'])) }}"
                                 class="sortable {{ $sortBy == 'scanned_at' ? 'active' : '' }}">
-                                Date & Time
+                                {{ __('messages.date_time') }}
                                 @if($sortBy == 'scanned_at')
                                     <i class="bi bi-chevron-{{ $sortDir == 'asc' ? 'up' : 'down' }}"></i>
                                 @endif
                             </a>
                         </th>
-                        <th>Employee ID</th>
-                        <th>Employee Name</th>
-                        <th>Department</th>
+                        <th>{{ __('messages.employee_id') }}</th>
+                        <th>{{ __('messages.employee_name') }}</th>
+                        <th>{{ __('messages.department') }}</th>
                         <th>
                             <a href="{{ route('historical.index', array_merge(request()->all(), ['sort_by' => 'location', 'sort_dir' => ($sortBy == 'location' && $sortDir == 'asc') ? 'desc' : 'asc'])) }}"
                                 class="sortable {{ $sortBy == 'location' ? 'active' : '' }}">
-                                Location
+                                {{ __('messages.location') }}
                                 @if($sortBy == 'location')
                                     <i class="bi bi-chevron-{{ $sortDir == 'asc' ? 'up' : 'down' }}"></i>
                                 @endif
@@ -118,7 +123,7 @@
                         <th>
                             <a href="{{ route('historical.index', array_merge(request()->all(), ['sort_by' => 'meal_type', 'sort_dir' => ($sortBy == 'meal_type' && $sortDir == 'asc') ? 'desc' : 'asc'])) }}"
                                 class="sortable {{ $sortBy == 'meal_type' ? 'active' : '' }}">
-                                Meal Type
+                                {{ __('messages.meal_type') }}
                                 @if($sortBy == 'meal_type')
                                     <i class="bi bi-chevron-{{ $sortDir == 'asc' ? 'up' : 'down' }}"></i>
                                 @endif
@@ -127,16 +132,16 @@
                         <th>
                             <a href="{{ route('historical.index', array_merge(request()->all(), ['sort_by' => 'scan_method', 'sort_dir' => ($sortBy == 'scan_method' && $sortDir == 'asc') ? 'desc' : 'asc'])) }}"
                                 class="sortable {{ $sortBy == 'scan_method' ? 'active' : '' }}">
-                                Method
+                                {{ __('messages.method') }}
                                 @if($sortBy == 'scan_method')
                                     <i class="bi bi-chevron-{{ $sortDir == 'asc' ? 'up' : 'down' }}"></i>
                                 @endif
                             </a>
                         </th>
-                        <th>Recorded By</th>
-                        <th>Proof</th>
+                        <th>{{ __('messages.recorded_by') }}</th>
+                        <th>{{ __('messages.proof') }}</th>
                         @if(auth()->user()->canAccessFullFeatures())
-                            <th>Actions</th>
+                            <th>{{ __('messages.actions') }}</th>
                         @endif
                     </tr>
                 </thead>
@@ -580,18 +585,18 @@
                 // Extract filename from path
                 const filename = record.absence_proof ? record.absence_proof.split('/').pop() : '-';
                 row.innerHTML = `
-                        <td>
-                            <input type="checkbox" name="attendance_ids[]" value="${record.id}"
-                                class="proof-checkbox" onchange="updateSelectedCount()">
-                        </td>
-                        <td style="word-break: break-all;">${filename}</td>
-                        <td>${new Date(record.scanned_at).toLocaleDateString('id-ID')}</td>
-                        <td>
-                            <a href="/storage/${record.absence_proof}" target="_blank" class="btn btn-primary btn-sm">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                        </td>
-                    `;
+                            <td>
+                                <input type="checkbox" name="attendance_ids[]" value="${record.id}"
+                                    class="proof-checkbox" onchange="updateSelectedCount()">
+                            </td>
+                            <td style="word-break: break-all;">${filename}</td>
+                            <td>${new Date(record.scanned_at).toLocaleDateString('id-ID')}</td>
+                            <td>
+                                <a href="/storage/${record.absence_proof}" target="_blank" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        `;
                 tbody.appendChild(row);
             });
 

@@ -46,7 +46,8 @@ class BulkController extends Controller
             'absence_proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:10240', // 10MB max
             'existing_proof' => 'nullable|string', // Path to existing file
             'entries' => 'required|array|min:1|max:200',
-            'entries.*.employee_id' => 'required|exists:employees,id',
+            'entries.*.employee_id' => 'nullable|exists:employees,id',
+            'entries.*.visitor_name' => 'nullable|string|max:255', // Support for visitors
             'entries.*.meals' => 'nullable|array', // Allow empty meals - will be skipped
             'entries.*.meals.*' => 'in:breakfast,lunch,dinner,supper,snack',
         ]);
@@ -111,17 +112,47 @@ class BulkController extends Controller
                 continue;
             }
 
-            $employee = Employee::find($entry['employee_id']);
+            $employee = null;
+            $visitorName = null;
+            $employeeId = null;
 
-            if (!$employee || $employee->active_status !== 'active') {
-                continue;
+            // Handle visitor entries
+            if (!empty($entry['visitor_name'])) {
+                $visitorName = $entry['visitor_name'];
+
+                // Find or create visitor employee record
+                $employee = Employee::where('name', $visitorName)
+                    ->where('employee_status', 'Visitor')
+                    ->first();
+
+                if (!$employee) {
+                    // Create visitor as temporary employee
+                    $employee = Employee::create([
+                        'employee_number' => 'VISITOR-' . time() . '-' . rand(100, 999),
+                        'name' => $visitorName,
+                        'department' => 'Visitor',
+                        'employee_status' => 'Visitor',
+                        'location' => $overrideLocation ?? 'Ramba',
+                        'active_status' => 'active',
+                    ]);
+                }
+                $employeeId = $employee->id;
+            } elseif (!empty($entry['employee_id'])) {
+                $employee = Employee::find($entry['employee_id']);
+
+                if (!$employee || $employee->active_status !== 'active') {
+                    continue;
+                }
+                $employeeId = $employee->id;
+            } else {
+                continue; // Neither visitor_name nor employee_id provided
             }
 
             $hasDinner = in_array('dinner', $entry['meals']);
 
             foreach ($entry['meals'] as $mealType) {
                 // Check for duplicate
-                $existingAttendance = Attendance::where('employee_id', $employee->id)
+                $existingAttendance = Attendance::where('employee_id', $employeeId)
                     ->where('meal_type', $mealType)
                     ->whereDate('scanned_at', $date->toDateString())
                     ->first();
@@ -151,7 +182,7 @@ class BulkController extends Controller
                 $location = $overrideLocation ?? $employee->location; // Use override or employee homebase
 
                 Attendance::create([
-                    'employee_id' => $employee->id,
+                    'employee_id' => $employeeId,
                     'meal_type' => $mealType,
                     'scan_method' => 'manual',
                     'recorded_by' => $recordedBy,
@@ -166,14 +197,14 @@ class BulkController extends Controller
 
             // Auto-add snack if dinner was selected but snack wasn't
             if ($hasDinner && !in_array('snack', $entry['meals'])) {
-                $snackExists = Attendance::where('employee_id', $employee->id)
+                $snackExists = Attendance::where('employee_id', $employeeId)
                     ->where('meal_type', 'snack')
                     ->whereDate('scanned_at', $date->toDateString())
                     ->exists();
 
                 if (!$snackExists) {
                     Attendance::create([
-                        'employee_id' => $employee->id,
+                        'employee_id' => $employeeId,
                         'meal_type' => 'snack',
                         'scan_method' => 'manual',
                         'recorded_by' => $recordedBy,

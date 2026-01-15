@@ -38,15 +38,24 @@ class EmployeeController extends Controller
         // Sorting
         $sortBy = $request->get('sort_by', 'name');
         $sortDir = $request->get('sort_dir', 'asc');
-        $allowedSorts = ['employee_number', 'name', 'company', 'department', 'location', 'employee_status', 'active_status'];
+        $allowedSorts = ['employee_number', 'name', 'department', 'location', 'employee_status', 'active_status', 'group'];
 
-        if (in_array($sortBy, $allowedSorts)) {
+        if ($sortBy === 'group') {
+            // Sort by first group name using a subquery
+            $query->addSelect([
+                'first_group_name' => \App\Models\EmployeeGroup::select('name')
+                    ->join('employee_group_members', 'employee_groups.id', '=', 'employee_group_members.employee_group_id')
+                    ->whereColumn('employee_group_members.employee_id', 'employees.id')
+                    ->orderBy('employee_group_members.order')
+                    ->limit(1)
+            ])->orderBy('first_group_name', $sortDir === 'desc' ? 'desc' : 'asc');
+        } elseif (in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortDir === 'desc' ? 'desc' : 'asc');
         } else {
             $query->orderBy('name', 'asc');
         }
 
-        $employees = $query->paginate(15)->withQueryString();
+        $employees = $query->with('groups')->paginate(15)->withQueryString();
 
         $departments = Employee::distinct()->pluck('department')->filter();
         $locations = Employee::distinct()->pluck('location')->filter();

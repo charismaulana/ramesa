@@ -2,13 +2,13 @@
 
 @section('content')
     <div class="page-header">
-        <h1 class="page-title">EXPORT DATA</h1>
-        <p class="page-subtitle">Configure your export options</p>
+        <h1 class="page-title">{{ __('messages.export_data') }}</h1>
+        <p class="page-subtitle">{{ __('messages.configure_export') }}</p>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">Export Options</h2>
+            <h2 class="card-title">{{ __('messages.export_options') }}</h2>
         </div>
 
         <form action="{{ route('historical.export') }}" method="POST" enctype="multipart/form-data">
@@ -16,13 +16,13 @@
             <div class="row">
                 <div class="col-6">
                     <div class="form-group">
-                        <label class="form-label">Start Date *</label>
+                        <label class="form-label">{{ __('messages.start_date') }} *</label>
                         <input type="date" name="start_date" class="form-control" value="{{ date('Y-m-01') }}" required>
                     </div>
                 </div>
                 <div class="col-6">
                     <div class="form-group">
-                        <label class="form-label">End Date *</label>
+                        <label class="form-label">{{ __('messages.end_date') }} *</label>
                         <input type="date" name="end_date" class="form-control" value="{{ date('Y-m-d') }}" required>
                     </div>
                 </div>
@@ -31,9 +31,9 @@
             <div class="row">
                 <div class="col-6">
                     <div class="form-group">
-                        <label class="form-label">Location</label>
+                        <label class="form-label">{{ __('messages.location') }}</label>
                         <select name="location" class="form-control">
-                            <option value="">All Locations</option>
+                            <option value="">{{ __('messages.all_locations') }}</option>
                             @foreach($locations as $location)
                                 <option value="{{ $location }}">{{ $location }}</option>
                             @endforeach
@@ -42,9 +42,9 @@
                 </div>
                 <div class="col-6">
                     <div class="form-group">
-                        <label class="form-label">Meal Type</label>
+                        <label class="form-label">{{ __('messages.meal_type') }}</label>
                         <select name="meal_type" class="form-control">
-                            <option value="">All Meal Types</option>
+                            <option value="">{{ __('messages.all_meal_types') }}</option>
                             @foreach($mealTypes as $meal)
                                 <option value="{{ $meal }}">{{ ucfirst($meal) }}</option>
                             @endforeach
@@ -54,15 +54,15 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Export Type</label>
+                <label class="form-label">{{ __('messages.export_type') }}</label>
                 <div class="export-type-options">
                     <label class="export-type-option">
                         <input type="radio" name="export_type" value="detailed" checked>
                         <div class="export-type-card">
                             <div class="export-type-icon"><i class="bi bi-list-ul"></i></div>
                             <div class="export-type-info">
-                                <strong>Detailed</strong>
-                                <p>All individual attendance records with employee info</p>
+                                <strong>{{ __('messages.detailed') }}</strong>
+                                <p>{{ __('messages.detailed_desc') }}</p>
                             </div>
                         </div>
                     </label>
@@ -71,8 +71,8 @@
                         <div class="export-type-card">
                             <div class="export-type-icon"><i class="bi bi-bar-chart"></i></div>
                             <div class="export-type-info">
-                                <strong>Summary</strong>
-                                <p>Meal counts grouped by date and location</p>
+                                <strong>{{ __('messages.summary') }}</strong>
+                                <p>{{ __('messages.summary_desc') }}</p>
                             </div>
                         </div>
                     </label>
@@ -81,8 +81,8 @@
                         <div class="export-type-card">
                             <div class="export-type-icon"><i class="bi bi-file-earmark-spreadsheet"></i></div>
                             <div class="export-type-info">
-                                <strong>Recap</strong>
-                                <p>Meal totals by employee status and department</p>
+                                <strong>{{ __('messages.recap_export') }}</strong>
+                                <p>{{ __('messages.recap_desc') }}</p>
                             </div>
                         </div>
                     </label>
@@ -91,8 +91,8 @@
                         <div class="export-type-card">
                             <div class="export-type-icon"><i class="bi bi-calendar-check"></i></div>
                             <div class="export-type-info">
-                                <strong>Daily</strong>
-                                <p>Daily attendance checklist per employee</p>
+                                <strong>{{ __('messages.daily') }}</strong>
+                                <p>{{ __('messages.daily_desc') }}</p>
                             </div>
                         </div>
                     </label>
@@ -102,7 +102,7 @@
             <!-- Recap Export Fields (shown only when Recap is selected) -->
             <div id="recapFields" style="display: none;">
                 <div class="form-group">
-                    <label class="form-label">Company Header</label>
+                    <label class="form-label">{{ __('messages.company_header') }}</label>
                     <input type="text" name="company_header" class="form-control" value="PT. Brylian Indah"
                         placeholder="Company name...">
                 </div>
@@ -110,15 +110,15 @@
                 <div class="row">
                     <div class="col-6">
                         <div class="form-group">
-                            <label class="form-label">Prepared By</label>
-                            <input type="text" name="prepared_by" class="form-control" placeholder="Name...">
+                            <label class="form-label">{{ __('messages.prepared_by') }}</label>
+                            <input type="text" name="prepared_by" class="form-control" placeholder="{{ __('messages.name') }}...">
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="form-group">
-                            <label class="form-label">Position</label>
+                            <label class="form-label">{{ __('messages.position') }}</label>
                             <input type="text" name="prepared_position" class="form-control" value="Camp Boss"
-                                placeholder="Position...">
+                                placeholder="{{ __('messages.position') }}...">
                         </div>
                     </div>
                 </div>
@@ -126,22 +126,22 @@
                 <div class="row">
                     <div class="col-6">
                         <div class="form-group">
-                            <label class="form-label">Checked By</label>
+                            <label class="form-label">{{ __('messages.checked_by') }}</label>
                             <input type="text" name="checked_by" class="form-control" value="Dedy B. / Rai A. / Marnita"
-                                placeholder="Name...">
+                                placeholder="{{ __('messages.name') }}...">
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="form-group">
-                            <label class="form-label">Position</label>
+                            <label class="form-label">{{ __('messages.position') }}</label>
                             <input type="text" name="checked_position" class="form-control" value="GS Ramba"
-                                placeholder="Position...">
+                                placeholder="{{ __('messages.position') }}...">
                         </div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Logo <span class="text-danger">*</span></label>
+                    <label class="form-label">{{ __('messages.logo') }} <span class="text-danger">*</span></label>
 
                     @if(count($savedLogos) > 0)
                         <div class="logo-gallery mb-2">
@@ -158,7 +158,7 @@
                                 <input type="radio" name="selected_logo" value="new" id="newLogoRadio">
                                 <div class="logo-preview upload-new">
                                     <i class="bi bi-plus-circle"></i>
-                                    <span class="logo-name">Upload New</span>
+                                    <span class="logo-name">{{ __('messages.upload_new') }}</span>
                                 </div>
                             </label>
                         </div>
@@ -167,17 +167,17 @@
                     <div id="newLogoUpload" style="{{ count($savedLogos) > 0 ? 'display: none;' : '' }}">
                         <input type="file" name="logo" class="form-control" accept="image/png,image/jpeg,image/jpg"
                             id="logoFileInput" {{ count($savedLogos) === 0 ? 'required' : '' }}>
-                        <small class="text-muted">Upload a PNG/JPG logo for the export header</small>
+                        <small class="text-muted">{{ __('messages.upload_logo_hint') }}</small>
                     </div>
                 </div>
             </div>
 
             <div class="d-flex gap-1 mt-3">
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-download"></i> Export Excel
+                    <i class="bi bi-download"></i> {{ __('messages.export_excel') }}
                 </button>
                 <a href="{{ route('historical.index') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Back to Historical
+                    <i class="bi bi-arrow-left"></i> {{ __('messages.back_to_historical') }}
                 </a>
             </div>
         </form>

@@ -38,6 +38,10 @@ Route::middleware(['auth', 'role'])->group(function () {
         Route::get('/historical/{id}/edit', [HistoricalController::class, 'edit'])->name('historical.edit');
         Route::put('/historical/{id}', [HistoricalController::class, 'update'])->name('historical.update');
         Route::delete('/historical/{id}', [HistoricalController::class, 'destroy'])->name('historical.destroy');
+
+        // Bulk edit routes
+        Route::get('/historical/bulk-edit', [HistoricalController::class, 'bulkEditForm'])->name('historical.bulkEditForm');
+        Route::post('/historical/bulk-edit', [HistoricalController::class, 'bulkEdit'])->name('historical.bulkEdit');
     });
 
     // Full access routes (super_admin and tim_catering only)
@@ -92,5 +96,10 @@ Route::middleware(['auth', 'role'])->group(function () {
 
         // Meal prices route
         Route::post('/dashboard/prices', [DashboardController::class, 'updatePrices'])->name('dashboard.updatePrices');
+
+        // Locked periods routes
+        Route::get('/admin/locked-periods', [\App\Http\Controllers\LockedPeriodController::class, 'index'])->name('admin.lockedPeriods');
+        Route::post('/admin/locked-periods', [\App\Http\Controllers\LockedPeriodController::class, 'store'])->name('admin.lockedPeriods.store');
+        Route::delete('/admin/locked-periods/{id}', [\App\Http\Controllers\LockedPeriodController::class, 'destroy'])->name('admin.lockedPeriods.destroy');
     });
 });

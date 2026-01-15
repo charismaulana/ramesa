@@ -43,6 +43,13 @@ class Employee extends Model
         return $this->hasMany(Attendance::class);
     }
 
+    public function groups()
+    {
+        return $this->belongsToMany(EmployeeGroup::class, 'employee_group_members')
+            ->withTimestamps()
+            ->withPivot('order');
+    }
+
     public function generateQrCode(): void
     {
         $qrCodePath = 'qrcodes/' . $this->employee_number . '.svg';

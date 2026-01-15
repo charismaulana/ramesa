@@ -25,6 +25,10 @@ class Employee extends Model
         'qr_code_path',
     ];
 
+    protected $casts = [
+        'accommodation' => 'array',
+    ];
+
     protected static function booted(): void
     {
         static::created(function (Employee $employee) {
@@ -48,6 +52,33 @@ class Employee extends Model
         return $this->belongsToMany(EmployeeGroup::class, 'employee_group_members')
             ->withTimestamps()
             ->withPivot('order');
+    }
+
+    /**
+     * Get formatted accommodation display string.
+     */
+    public function getAccommodationDisplayAttribute(): string
+    {
+        if (empty($this->accommodation)) {
+            return '-';
+        }
+
+        $parts = [];
+        foreach ($this->accommodation as $location => $room) {
+            if (!empty($room)) {
+                $parts[] = "{$location}: {$room}";
+            }
+        }
+
+        return empty($parts) ? '-' : implode(', ', $parts);
+    }
+
+    /**
+     * Get accommodation for a specific location.
+     */
+    public function getAccommodationFor(string $location): ?string
+    {
+        return $this->accommodation[$location] ?? null;
     }
 
     public function generateQrCode(): void
