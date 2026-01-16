@@ -81,6 +81,21 @@ class DashboardController extends Controller
         ];
         $estimatedInvoice['total'] = array_sum($estimatedInvoice);
 
+        // Calendar data - get dates with attendance per location for current month
+        $calendarMonth = $request->get('calendar_month', Carbon::now()->format('Y-m'));
+        $calendarStart = Carbon::parse($calendarMonth . '-01')->startOfMonth();
+        $calendarEnd = $calendarStart->copy()->endOfMonth();
+
+        $calendarData = [];
+        foreach ($locations as $location) {
+            $calendarData[$location] = Attendance::where('location', $location)
+                ->whereBetween('scanned_at', [$calendarStart, $calendarEnd])
+                ->select(DB::raw('DATE(scanned_at) as date'), DB::raw('COUNT(*) as count'))
+                ->groupBy(DB::raw('DATE(scanned_at)'))
+                ->pluck('count', 'date')
+                ->toArray();
+        }
+
         return view('dashboard.index', compact(
             'statsByLocation',
             'totalStats',
@@ -93,7 +108,11 @@ class DashboardController extends Controller
             'thisMonthTotal',
             'activeEmployees',
             'mealPrices',
-            'estimatedInvoice'
+            'estimatedInvoice',
+            'calendarData',
+            'calendarMonth',
+            'calendarStart',
+            'calendarEnd'
         ));
     }
 

@@ -40,95 +40,6 @@
         </div>
     </div>
 
-    <!-- Attendance Calendar by Location -->
-    <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h2 class="card-title">📅 Attendance Calendar</h2>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <select id="calendarMonth" class="form-control"
-                    style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.875rem;" onchange="changeCalendarMonth()">
-                    @php
-                        for ($i = 0; $i < 12; $i++) {
-                            $monthDate = now()->subMonths($i);
-                            $monthValue = $monthDate->format('Y-m');
-                            $monthLabel = $monthDate->format('F Y');
-                            $selected = $monthValue == $calendarMonth ? 'selected' : '';
-                            echo "<option value='{$monthValue}' {$selected}>{$monthLabel}</option>";
-                        }
-                    @endphp
-                </select>
-            </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-            @foreach($locations as $location)
-                @php
-                    $daysInMonth = $calendarStart->daysInMonth;
-                    $firstDayOfWeek = $calendarStart->dayOfWeek;
-                    $today = now()->format('Y-m-d');
-                    $locationData = $calendarData[$location] ?? [];
-                @endphp
-                <div style="background: rgba(255,255,255,0.02); border-radius: 8px; padding: 0.75rem;">
-                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--accent);">{{ $location }}</h4>
-
-                    <!-- Day Headers -->
-                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-bottom: 3px;">
-                        @foreach(['S', 'M', 'T', 'W', 'T', 'F', 'S'] as $day)
-                            <div style="text-align: center; font-size: 0.6rem; color: var(--text-muted);">{{ $day }}</div>
-                        @endforeach
-                    </div>
-
-                    <!-- Calendar Days -->
-                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px;">
-                        @for($i = 0; $i < $firstDayOfWeek; $i++)
-                            <div style="aspect-ratio: 1;"></div>
-                        @endfor
-
-                        @for($day = 1; $day <= $daysInMonth; $day++)
-                            @php
-                                $dateStr = $calendarStart->copy()->addDays($day - 1)->format('Y-m-d');
-                                $hasData = isset($locationData[$dateStr]);
-                                $mealCount = $locationData[$dateStr] ?? 0;
-                                $isToday = $dateStr == $today;
-                                $isFuture = $dateStr > $today;
-
-                                if ($isFuture) {
-                                    $bgColor = 'rgba(128, 128, 128, 0.1)';
-                                } elseif ($hasData) {
-                                    $bgColor = 'rgba(0, 200, 83, 0.4)';
-                                } else {
-                                    $bgColor = 'rgba(100, 100, 100, 0.2)';
-                                }
-                            @endphp
-                            <a href="{{ route('dashboard', ['date_from' => $dateStr, 'date_to' => $dateStr]) }}"
-                                style="aspect-ratio: 1; background: {{ $bgColor }}; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; text-decoration: none; color: inherit; {{ $isToday ? 'border: 1px solid var(--primary);' : '' }}"
-                                title="{{ $hasData ? $mealCount . ' meals' : 'No data' }}">
-                                {{ $day }}
-                            </a>
-                        @endfor
-                    </div>
-                </div>
-            @endforeach
-        </div>
-
-        <!-- Legend -->
-        <div
-            style="display: flex; gap: 1rem; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--card-border); font-size: 0.75rem; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 0.25rem;">
-                <div style="width: 12px; height: 12px; background: rgba(0, 200, 83, 0.4); border-radius: 2px;"></div>
-                <span>Has Data</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.25rem;">
-                <div style="width: 12px; height: 12px; background: rgba(100, 100, 100, 0.2); border-radius: 2px;"></div>
-                <span>No Data</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.25rem;">
-                <div style="width: 12px; height: 12px; border: 1px solid var(--primary); border-radius: 2px;"></div>
-                <span>Today</span>
-            </div>
-        </div>
-    </div>
-
     <!-- Date Filter -->
     <div class="card">
         <div class="card-header">
@@ -467,15 +378,4 @@
             text-align: center;
         }
     </style>
-@endpush
-
-@push('scripts')
-<script>
-    function changeCalendarMonth() {
-        const month = document.getElementById('calendarMonth').value;
-        const url = new URL(window.location.href);
-        url.searchParams.set('calendar_month', month);
-        window.location.href = url.toString();
-    }
-</script>
 @endpush

@@ -13,8 +13,8 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Date filter
-        $dateFrom = $request->get('date_from', Carbon::today()->toDateString());
+        // Date filter - default from start of month to today
+        $dateFrom = $request->get('date_from', Carbon::now()->startOfMonth()->toDateString());
         $dateTo = $request->get('date_to', Carbon::today()->toDateString());
 
         // Get locations from employees
