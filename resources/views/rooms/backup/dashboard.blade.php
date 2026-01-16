@@ -464,122 +464,6 @@
             background: #FFD700;
             border-radius: 50%;
         }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            .page-header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .page-header .d-flex {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .page-header form {
-                flex-wrap: wrap;
-            }
-
-            .page-header .btn-sm {
-                font-size: 0.75rem;
-                padding: 0.35rem 0.5rem;
-            }
-
-            .group-filter-container {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-
-            .group-filter-item {
-                font-size: 0.75rem;
-                padding: 0.25rem 0.5rem;
-            }
-
-            .room-table {
-                font-size: 0.65rem;
-            }
-
-            .room-header {
-                padding: 0.3rem 0.2rem;
-                font-size: 0.6rem;
-            }
-
-            .room-cell,
-            .room-cell-status {
-                padding: 0.2rem;
-                font-size: 0.55rem;
-            }
-
-            .room-cell-room {
-                min-width: 25px;
-                font-size: 0.55rem;
-            }
-
-            .room-cell-name {
-                min-width: 60px;
-                max-width: 80px;
-            }
-
-            .room-cell-status {
-                min-width: 25px;
-            }
-
-            .footer-counts {
-                flex-wrap: wrap;
-                gap: 0.2rem;
-                font-size: 0.55rem;
-            }
-
-            .count-on,
-            .count-off,
-            .count-vac {
-                padding: 0.15rem 0.3rem;
-                font-size: 0.55rem;
-            }
-
-            .summary-content {
-                flex-wrap: wrap;
-                gap: 0.75rem;
-            }
-
-            .summary-item span:first-child {
-                font-size: 1.25rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .page-title {
-                font-size: 1.25rem;
-            }
-
-            .page-subtitle {
-                font-size: 0.75rem;
-            }
-
-            .form-control {
-                font-size: 0.75rem;
-                padding: 0.35rem;
-            }
-
-            .room-table {
-                font-size: 0.55rem;
-            }
-
-            .room-cell-name {
-                min-width: 50px;
-                max-width: 60px;
-            }
-
-            .summary-item span:first-child {
-                font-size: 1rem;
-            }
-
-            .summary-item span:last-child {
-                font-size: 0.65rem;
-            }
-        }
     </style>
 
     <script>
@@ -587,10 +471,10 @@
             const employeeId = cell.dataset.employeeId;
             const currentStatus = cell.dataset.currentStatus;
             const newStatus = currentStatus === 'ON' ? 'OFF' : 'ON';
-
+            
             // Show loading
             cell.style.opacity = '0.5';
-
+            
             fetch('{{ route("rooms.toggleOverride") }}', {
                 method: 'POST',
                 headers: {
@@ -604,20 +488,20 @@
                     status: newStatus
                 })
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.reload();
-                    } else {
-                        alert('Failed to update status');
-                        cell.style.opacity = '1';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
                     alert('Failed to update status');
                     cell.style.opacity = '1';
-                });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update status');
+                cell.style.opacity = '1';
+            });
         }
 
         function toggleGroupVisibility() {
@@ -630,7 +514,7 @@
                 const groupIndex = checkbox.dataset.groupIndex;
                 const isChecked = checkbox.checked;
                 const groupCols = document.querySelectorAll('.group-' + groupIndex);
-
+                
                 groupCols.forEach(col => {
                     col.style.display = isChecked ? '' : 'none';
                 });

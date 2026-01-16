@@ -158,8 +158,12 @@
 
                                 // Get meal types for this day
                                 $mealTypes = [];
+                                $locations = [];
                                 if ($hasAttendance) {
                                     $mealTypes = $attendanceDates[$dateStr]->pluck('meal_type')->unique()->toArray();
+                                    $locations = $attendanceDates[$dateStr]->pluck('location')->unique()->map(function($loc) {
+                                        return substr($loc, 0, 1); // First letter: R, B, M, K
+                                    })->toArray();
                                 }
 
                                 // Determine background color
@@ -179,11 +183,11 @@
                                 }
                             @endphp
                             <div style="aspect-ratio: 1; background: {{ $bgColor }}; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem; position: relative; border: 2px solid {{ $borderColor }}; cursor: {{ $hasAttendance ? 'pointer' : 'default' }};"
-                                @if($hasAttendance) title="{{ implode(', ', array_map('ucfirst', $mealTypes)) }}" @endif>
+                                @if($hasAttendance) title="{{ implode(', ', array_map('ucfirst', $mealTypes)) }} @ {{ implode('/', $attendanceDates[$dateStr]->pluck('location')->unique()->toArray()) }}" @endif>
                                 <span
                                     style="font-weight: {{ $isToday ? 'bold' : 'normal' }}; color: {{ $isToday ? 'var(--primary)' : 'inherit' }};">{{ $day }}</span>
                                 @if($hasAttendance)
-                                    <span style="font-size: 0.55rem; color: var(--success);">{{ count($mealTypes) }}x</span>
+                                    <span style="font-size: 0.5rem; color: var(--accent);">{{ implode('', $locations) }}</span>
                                 @endif
                             </div>
                         @endfor
