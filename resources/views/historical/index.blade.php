@@ -54,13 +54,16 @@
                 <select name="meal_type" class="form-control">
                     <option value="">{{ __('messages.all_meals') }}</option>
                     <option value="breakfast" {{ request('meal_type') == 'breakfast' ? 'selected' : '' }}>
-                        {{ __('messages.breakfast') }}</option>
+                        {{ __('messages.breakfast') }}
+                    </option>
                     <option value="lunch" {{ request('meal_type') == 'lunch' ? 'selected' : '' }}>{{ __('messages.lunch') }}
                     </option>
                     <option value="dinner" {{ request('meal_type') == 'dinner' ? 'selected' : '' }}>
-                        {{ __('messages.dinner') }}</option>
+                        {{ __('messages.dinner') }}
+                    </option>
                     <option value="supper" {{ request('meal_type') == 'supper' ? 'selected' : '' }}>
-                        {{ __('messages.supper') }}</option>
+                        {{ __('messages.supper') }}
+                    </option>
                     <option value="snack" {{ request('meal_type') == 'snack' ? 'selected' : '' }}>{{ __('messages.snack') }}
                     </option>
                 </select>
@@ -74,6 +77,12 @@
             <div class="form-group">
                 <label class="form-label">{{ __('messages.end_date') }}</label>
                 <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
+            </div>
+
+            <div class="form-group" style="flex: 1; min-width: 150px;">
+                <label class="form-label">📎 Proof File</label>
+                <input type="text" name="proof_search" class="form-control" placeholder="e.g. 2026-01-14_Ramba"
+                    value="{{ request('proof_search') }}">
             </div>
 
             <div class="d-flex gap-1">
@@ -585,18 +594,18 @@
                 // Extract filename from path
                 const filename = record.absence_proof ? record.absence_proof.split('/').pop() : '-';
                 row.innerHTML = `
-                            <td>
-                                <input type="checkbox" name="attendance_ids[]" value="${record.id}"
-                                    class="proof-checkbox" onchange="updateSelectedCount()">
-                            </td>
-                            <td style="word-break: break-all;">${filename}</td>
-                            <td>${new Date(record.scanned_at).toLocaleDateString('id-ID')}</td>
-                            <td>
-                                <a href="/storage/${record.absence_proof}" target="_blank" class="btn btn-primary btn-sm">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                            </td>
-                        `;
+                                <td>
+                                    <input type="checkbox" name="attendance_ids[]" value="${record.id}"
+                                        class="proof-checkbox" onchange="updateSelectedCount()">
+                                </td>
+                                <td style="word-break: break-all;">${filename}</td>
+                                <td>${new Date(record.scanned_at).toLocaleDateString('id-ID')}</td>
+                                <td>
+                                    <a href="/storage/${record.absence_proof}" target="_blank" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            `;
                 tbody.appendChild(row);
             });
 

@@ -51,6 +51,12 @@ class HistoricalController extends Controller
             });
         }
 
+        // Absence proof filename filter
+        if ($request->filled('proof_search')) {
+            $proofSearch = $request->proof_search;
+            $query->where('absence_proof', 'like', "%{$proofSearch}%");
+        }
+
         // Sorting
         $sortBy = $request->get('sort_by', 'scanned_at');
         $sortDir = $request->get('sort_dir', 'desc');

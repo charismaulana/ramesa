@@ -130,7 +130,23 @@ class HistoricalController extends Controller
         $attendance = Attendance::with('employee')->findOrFail($id);
         $employees = Employee::where('active_status', 'active')->orderBy('name')->get();
 
-        return view('historical.edit', compact('attendance', 'employees'));
+        // Get recent absence proof files from the last 60 days
+        $recentProofs = Attendance::whereNotNull('absence_proof')
+            ->where('scanned_at', '>=', now()->subDays(60))
+            ->select('absence_proof')
+            ->distinct()
+            ->orderBy('scanned_at', 'desc')
+            ->limit(100)
+            ->pluck('absence_proof')
+            ->map(function ($path) {
+                return [
+                    'path' => $path,
+                    'filename' => basename($path),
+                    'url' => \Storage::disk('public_direct')->url($path)
+                ];
+            });
+
+        return view('historical.edit', compact('attendance', 'employees', 'recentProofs'));
     }
 
     /**
@@ -232,6 +248,7 @@ class HistoricalController extends Controller
             'location' => 'required|string',
             'recorded_by' => 'nullable|string|max:255',
             'absence_proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:10240',
+            'existing_proof' => 'nullable|string',
             'apply_to_all' => 'nullable|boolean',
         ]);
 
@@ -247,9 +264,23 @@ class HistoricalController extends Controller
 
         $oldProofPath = $attendance->absence_proof;
 
-        // Handle file upload if present
+        // Handle proof file: either select existing or upload new
         $newProofPath = null;
-        if ($request->hasFile('absence_proof')) {
+
+        // First check if an existing proof file was selected from dropdown
+        if ($request->filled('existing_proof') && $request->input('existing_proof') !== '') {
+            $newProofPath = $request->input('existing_proof');
+            $validated['absence_proof'] = $newProofPath;
+
+            // Apply to all attendances with same proof if checkbox checked
+            if ($request->input('apply_to_all') && $oldProofPath) {
+                Attendance::where('absence_proof', $oldProofPath)
+                    ->where('id', '!=', $id)
+                    ->update(['absence_proof' => $newProofPath]);
+            }
+        }
+        // Otherwise check for new file upload
+        elseif ($request->hasFile('absence_proof')) {
             $file = $request->file('absence_proof');
             $extension = $file->getClientOriginalExtension();
             $date = \Carbon\Carbon::parse($validated['scanned_at']);
@@ -278,8 +309,9 @@ class HistoricalController extends Controller
         $validated['edited_by'] = auth()->user()->name;
         $validated['edited_at'] = now();
 
-        // Remove apply_to_all from validated before updating
+        // Remove non-database fields from validated before updating
         unset($validated['apply_to_all']);
+        unset($validated['existing_proof']);
 
         $attendance->update($validated);
 
