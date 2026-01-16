@@ -143,6 +143,15 @@ return [
     'status' => 'Status',
     'time' => 'Waktu',
 
+    // Edit Record Page
+    'current_file' => 'File saat ini',
+    'no_proof_file' => 'Tidak ada file bukti terlampir',
+    'upload_new_file_hint' => 'Unggah file baru untuk mengganti (JPG, PNG, PDF - maks 10MB)',
+    'apply_to_all' => 'Terapkan bukti baru ke SEMUA kehadiran dengan file yang sama',
+    'records' => 'rekaman',
+    'selected' => 'Dipilih',
+    'new_file' => 'File baru',
+
     // Messages
     'success' => 'Berhasil',
     'error' => 'Kesalahan',

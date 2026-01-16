@@ -79,37 +79,89 @@
             <!-- Absence Proof Section -->
             <div class="form-group"
                 style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--card-border);">
-                <label class="form-label">📎 Absence Proof</label>
+                <label class="form-label">📎 {{ __('messages.absence_proof') }}</label>
 
                 @if($attendance->absence_proof)
                     <div
                         style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(0, 255, 136, 0.1); border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
-                        <span style="color: var(--success);">Current file:</span>
+                        <span style="color: var(--success);">{{ __('messages.current_file') }}:</span>
                         <a href="{{ Storage::disk('public_direct')->url($attendance->absence_proof) }}" target="_blank"
                             class="btn btn-primary btn-sm">
-                            <i class="bi bi-file-earmark-image"></i> View
+                            <i class="bi bi-file-earmark-image"></i> {{ __('messages.view') }}
                         </a>
                         <span
                             style="color: var(--text-muted); font-size: 0.85rem;">{{ basename($attendance->absence_proof) }}</span>
                     </div>
                 @else
-                    <div style="margin-bottom: 1rem; color: var(--text-muted);">No proof file attached</div>
+                    <div style="margin-bottom: 1rem; color: var(--text-muted);">{{ __('messages.no_proof_file') }}</div>
+                @endif
+
+                <!-- Existing Proof Dropdown -->
+                @if($recentProofs->count() > 0)
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem;">
+                        <select name="existing_proof" id="existing_proof" class="form-control" style="flex: 1;"
+                            onchange="handleProofSelection()">
+                            <option value="">-- {{ __('messages.select_existing_or_upload') }} --</option>
+                            @foreach($recentProofs as $proof)
+                                <option value="{{ $proof['path'] }}" data-url="{{ $proof['url'] }}">
+                                    {{ $proof['filename'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <label class="btn btn-primary" for="absence_proof" style="margin: 0; white-space: nowrap;">
+                            <i class="bi bi-upload"></i> {{ __('messages.upload') }}
+                        </label>
+                    </div>
                 @endif
 
                 <input type="file" name="absence_proof" id="absence_proof" class="form-control"
-                    accept=".jpg,.jpeg,.png,.pdf" style="margin-bottom: 0.5rem;">
-                <small style="color: var(--text-muted);">Upload new file to replace (JPG, PNG, PDF - max 10MB)</small>
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    style="{{ $recentProofs->count() > 0 ? 'display: none;' : '' }} margin-bottom: 0.5rem;"
+                    onchange="handleFileUpload()">
+                <div id="file-status" style="margin-bottom: 0.5rem; font-size: 0.85rem;"></div>
+                <small style="color: var(--text-muted);">{{ __('messages.upload_new_file_hint') }}</small>
 
                 @if($attendance->absence_proof)
                     <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255, 165, 0, 0.1); border-radius: 8px;">
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--accent);">
                             <input type="checkbox" name="apply_to_all" value="1" style="accent-color: var(--primary);">
-                            Apply new proof to ALL attendances with the same file
-                            ({{ \App\Models\Attendance::where('absence_proof', $attendance->absence_proof)->count() }} records)
+                            {{ __('messages.apply_to_all') }}
+                            ({{ \App\Models\Attendance::where('absence_proof', $attendance->absence_proof)->count() }}
+                            {{ __('messages.records') }})
                         </label>
                     </div>
                 @endif
             </div>
+
+            @push('scripts')
+                <script>
+                    function handleProofSelection() {
+                        const select = document.getElementById('existing_proof');
+                        const fileInput = document.getElementById('absence_proof');
+                        const fileStatus = document.getElementById('file-status');
+
+                        if (select.value) {
+                            // Clear file input when selecting from dropdown
+                            fileInput.value = '';
+                            fileStatus.innerHTML = '<span style="color: var(--success);"><i class="bi bi-check-circle"></i> {{ __("messages.selected") }}: ' + select.options[select.selectedIndex].text + '</span>';
+                        } else {
+                            fileStatus.innerHTML = '';
+                        }
+                    }
+
+                    function handleFileUpload() {
+                        const fileInput = document.getElementById('absence_proof');
+                        const select = document.getElementById('existing_proof');
+                        const fileStatus = document.getElementById('file-status');
+
+                        if (fileInput.files.length > 0) {
+                            // Clear dropdown when uploading new file
+                            if (select) select.value = '';
+                            fileStatus.innerHTML = '<span style="color: var(--success);"><i class="bi bi-check-circle"></i> {{ __("messages.new_file") }}: ' + fileInput.files[0].name + '</span>';
+                        }
+                    }
+                </script>
+            @endpush
 
             @if($attendance->edited_by)
                 <div class="alert alert-info"

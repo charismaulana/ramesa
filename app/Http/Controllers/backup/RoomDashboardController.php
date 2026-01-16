@@ -25,14 +25,14 @@ class RoomDashboardController extends Controller
         $date = $request->get('date', Carbon::today()->format('Y-m-d'));
         $dateCarbon = Carbon::parse($date);
 
-        // Get room groups for this location with rooms
+        // Get room groups for this location
         $roomGroups = RoomGroup::where('location', $location)
             ->orderBy('order')
             ->with([
-                    'rooms' => function ($q) {
-                        $q->orderBy('order');
-                    }
-                ])
+                'rooms' => function ($q) {
+                    $q->orderBy('order');
+                }
+            ])
             ->get();
 
         // If no groups exist, fall back to employee-derived data
@@ -40,26 +40,16 @@ class RoomDashboardController extends Controller
             return $this->indexLegacy($request);
         }
 
-        // Get all active employees with accommodation - select only needed columns
+        // Get all active employees with accommodation at this location
         $employees = Employee::where('active_status', 'active')
             ->whereNotNull('accommodation')
-            ->select(['id', 'name', 'department', 'employee_status', 'accommodation'])
             ->with([
-                    'attendances' => function ($q) use ($dateCarbon, $location) {
-                        $q->whereDate('scanned_at', $dateCarbon->toDateString())
-                            ->where('location', $location)
-                            ->select(['id', 'employee_id']); // Only need to check existence
-                    }
-                ])
+                'attendances' => function ($q) use ($dateCarbon, $location) {
+                    $q->whereDate('scanned_at', $dateCarbon->toDateString())
+                        ->where('location', $location);
+                }
+            ])
             ->get();
-
-        // Pre-load ALL overrides for this location and date in ONE query
-        $employeeIds = $employees->pluck('id')->toArray();
-        $overrides = RoomStatusOverride::where('location', $location)
-            ->where('date', $dateCarbon->toDateString())
-            ->whereIn('employee_id', $employeeIds)
-            ->get()
-            ->keyBy('employee_id'); // Key by employee_id for O(1) lookup
 
         // Group employees by their accommodation at this location
         $employeesByRoom = [];
@@ -120,8 +110,11 @@ class RoomDashboardController extends Controller
                         $employeeId = $employee->id;
                         $hasAttendance = $employee->attendances->isNotEmpty();
 
-                        // Check for override using pre-loaded collection (O(1) lookup)
-                        $override = $overrides->get($employee->id);
+                        // Check for override
+                        $override = RoomStatusOverride::where('employee_id', $employee->id)
+                            ->where('location', $location)
+                            ->where('date', $dateCarbon->toDateString())
+                            ->first();
 
                         if ($override) {
                             $hasAttendance = ($override->status === 'ON');
@@ -172,17 +165,8 @@ class RoomDashboardController extends Controller
         $date = $request->get('date', Carbon::today()->format('Y-m-d'));
         $dateCarbon = Carbon::parse($date);
 
-        // Eager load attendances for the specific date/location
         $employees = Employee::where('active_status', 'active')
             ->whereNotNull('accommodation')
-            ->select(['id', 'name', 'accommodation'])
-            ->with([
-                    'attendances' => function ($q) use ($dateCarbon, $location) {
-                        $q->whereDate('scanned_at', $dateCarbon->toDateString())
-                            ->where('location', $location)
-                            ->select(['id', 'employee_id']);
-                    }
-                ])
             ->get()
             ->filter(function ($employee) use ($location) {
                 return !empty($employee->accommodation[$location] ?? null);
@@ -195,8 +179,10 @@ class RoomDashboardController extends Controller
                 $roomData[$room] = [];
             }
 
-            // Use eager loaded relation instead of query
-            $hasAttendance = $employee->attendances->isNotEmpty();
+            $hasAttendance = $employee->attendances()
+                ->whereDate('scanned_at', $dateCarbon->toDateString())
+                ->where('location', $location)
+                ->exists();
 
             $roomData[$room][] = [
                 'room' => $room,
@@ -248,10 +234,10 @@ class RoomDashboardController extends Controller
         $roomGroups = RoomGroup::where('location', $location)
             ->orderBy('order')
             ->with([
-                    'rooms' => function ($q) {
-                        $q->orderBy('order');
-                    }
-                ])
+                'rooms' => function ($q) {
+                    $q->orderBy('order');
+                }
+            ])
             ->get();
 
         $locations = ['Ramba', 'Mangunjaya', 'Keluang', 'Bentayan'];
@@ -465,10 +451,10 @@ class RoomDashboardController extends Controller
         $roomGroups = RoomGroup::where('location', $location)
             ->orderBy('order')
             ->with([
-                    'rooms' => function ($q) {
-                        $q->orderBy('order');
-                    }
-                ])
+                'rooms' => function ($q) {
+                    $q->orderBy('order');
+                }
+            ])
             ->get();
 
         if ($roomGroups->isEmpty()) {
@@ -479,11 +465,11 @@ class RoomDashboardController extends Controller
         $employees = Employee::where('active_status', 'active')
             ->whereNotNull('accommodation')
             ->with([
-                    'attendances' => function ($q) use ($dateCarbon, $location) {
-                        $q->whereDate('scanned_at', $dateCarbon->toDateString())
-                            ->where('location', $location);
-                    }
-                ])
+                'attendances' => function ($q) use ($dateCarbon, $location) {
+                    $q->whereDate('scanned_at', $dateCarbon->toDateString())
+                        ->where('location', $location);
+                }
+            ])
             ->get();
 
         // Group employees by their accommodation at this location

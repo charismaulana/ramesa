@@ -133,6 +133,96 @@ class HistoricalController extends Controller
         return view('historical.edit', compact('attendance', 'employees'));
     }
 
+    /**
+     * Show bulk edit form for a specific employee's meals on a specific date.
+     */
+    public function bulkEditForm(Request $request)
+    {
+        $validated = $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'date' => 'required|date',
+        ]);
+
+        $employee = Employee::findOrFail($validated['employee_id']);
+        $date = \Carbon\Carbon::parse($validated['date']);
+
+        // Get all attendance records for this employee on this date
+        $attendances = Attendance::where('employee_id', $employee->id)
+            ->whereDate('scanned_at', $date->toDateString())
+            ->orderByRaw("FIELD(meal_type, 'breakfast', 'lunch', 'dinner', 'supper', 'snack')")
+            ->get();
+
+        if ($attendances->isEmpty()) {
+            return redirect()->route('historical.index')
+                ->with('error', 'No attendance records found for this employee on this date.');
+        }
+
+        $employees = Employee::where('active_status', 'active')->orderBy('name')->get();
+
+        return view('historical.bulk-edit', compact('employee', 'date', 'attendances', 'employees'));
+    }
+
+    /**
+     * Process bulk edit for an employee's meals on a specific date.
+     */
+    public function bulkEdit(Request $request)
+    {
+        $validated = $request->validate([
+            'original_employee_id' => 'required|exists:employees,id',
+            'date' => 'required|date',
+            'new_employee_id' => 'required|exists:employees,id',
+            'meals' => 'nullable|array',
+            'meals.*' => 'in:breakfast,lunch,dinner,supper,snack',
+            'location' => 'required|string',
+        ]);
+
+        $date = \Carbon\Carbon::parse($validated['date']);
+
+        // Check if date is locked (only applies to non-super_admin users)
+        if (!auth()->user()->isSuperAdmin()) {
+            if (\App\Models\LockedPeriod::isDateLocked($date, $validated['location'])) {
+                return back()->with('error', 'Cannot edit: This date period is locked by administrator.');
+            }
+        }
+
+        // Get all existing attendance records for this employee on this date
+        $existingAttendances = Attendance::where('employee_id', $validated['original_employee_id'])
+            ->whereDate('scanned_at', $date->toDateString())
+            ->get();
+
+        $selectedMeals = $validated['meals'] ?? [];
+        $updatedCount = 0;
+        $deletedCount = 0;
+
+        foreach ($existingAttendances as $attendance) {
+            if (in_array($attendance->meal_type, $selectedMeals)) {
+                // Update the employee if changed
+                if ($attendance->employee_id != $validated['new_employee_id']) {
+                    $attendance->employee_id = $validated['new_employee_id'];
+                }
+                $attendance->location = $validated['location'];
+                $attendance->edited_by = auth()->user()->name;
+                $attendance->edited_at = now();
+                $attendance->save();
+                $updatedCount++;
+            } else {
+                // Delete unchecked meals
+                $attendance->deleted_by = auth()->user()->name;
+                $attendance->save();
+                $attendance->delete();
+                $deletedCount++;
+            }
+        }
+
+        $message = "Bulk edit completed: {$updatedCount} records updated";
+        if ($deletedCount > 0) {
+            $message .= ", {$deletedCount} records deleted";
+        }
+
+        return redirect()->route('historical.index')
+            ->with('success', $message);
+    }
+
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
@@ -146,6 +236,15 @@ class HistoricalController extends Controller
         ]);
 
         $attendance = Attendance::findOrFail($id);
+
+        // Check if date is locked (only applies to non-super_admin users)
+        if (!auth()->user()->isSuperAdmin()) {
+            $attendanceDate = \Carbon\Carbon::parse($attendance->scanned_at);
+            if (\App\Models\LockedPeriod::isDateLocked($attendanceDate, $attendance->location)) {
+                return back()->with('error', 'Cannot edit: This date period is locked by administrator.');
+            }
+        }
+
         $oldProofPath = $attendance->absence_proof;
 
         // Handle file upload if present
@@ -191,6 +290,14 @@ class HistoricalController extends Controller
     public function destroy($id)
     {
         $attendance = Attendance::findOrFail($id);
+
+        // Check if date is locked (only applies to non-super_admin users)
+        if (!auth()->user()->isSuperAdmin()) {
+            $attendanceDate = \Carbon\Carbon::parse($attendance->scanned_at);
+            if (\App\Models\LockedPeriod::isDateLocked($attendanceDate, $attendance->location)) {
+                return back()->with('error', 'Cannot delete: This date period is locked by administrator.');
+            }
+        }
 
         // Track who deleted before soft deleting
         $attendance->deleted_by = auth()->user()->name;
@@ -961,6 +1068,15 @@ class HistoricalController extends Controller
             'delete_location' => 'nullable|string',
             'delete_group_id' => 'nullable|exists:employee_groups,id',
         ]);
+
+        // Check if date is locked (only applies to non-super_admin users)
+        if (!auth()->user()->isSuperAdmin()) {
+            $deleteDate = \Carbon\Carbon::parse($validated['delete_date']);
+            $location = $validated['delete_location'] ?? null;
+            if (\App\Models\LockedPeriod::isDateLocked($deleteDate, $location)) {
+                return back()->with('error', 'Cannot bulk delete: This date period is locked by administrator.');
+            }
+        }
 
         $query = Attendance::whereDate('scanned_at', $validated['delete_date']);
 

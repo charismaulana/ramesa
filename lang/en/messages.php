@@ -143,6 +143,15 @@ return [
     'status' => 'Status',
     'time' => 'Time',
 
+    // Edit Record Page
+    'current_file' => 'Current file',
+    'no_proof_file' => 'No proof file attached',
+    'upload_new_file_hint' => 'Upload new file to replace (JPG, PNG, PDF - max 10MB)',
+    'apply_to_all' => 'Apply new proof to ALL attendances with the same file',
+    'records' => 'records',
+    'selected' => 'Selected',
+    'new_file' => 'New file',
+
     // Messages
     'success' => 'Success',
     'error' => 'Error',

@@ -38,7 +38,7 @@ class EmployeeController extends Controller
         // Sorting
         $sortBy = $request->get('sort_by', 'name');
         $sortDir = $request->get('sort_dir', 'asc');
-        $allowedSorts = ['employee_number', 'name', 'department', 'location', 'employee_status', 'active_status', 'group'];
+        $allowedSorts = ['employee_number', 'name', 'department', 'location', 'accommodation', 'employee_status', 'active_status', 'group'];
 
         if ($sortBy === 'group') {
             // Sort by first group name using a subquery
@@ -80,10 +80,16 @@ class EmployeeController extends Controller
             'position' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
-            'accommodation' => 'nullable|string|max:255',
+            'accommodation' => 'nullable|array',
+            'accommodation.*' => 'nullable|string|max:255',
             'active_status' => 'required|in:active,inactive',
             'employee_status' => 'nullable|string|max:255',
         ]);
+
+        // Filter out empty accommodation entries
+        if (isset($validated['accommodation'])) {
+            $validated['accommodation'] = array_filter($validated['accommodation'], fn($value) => !empty($value));
+        }
 
         // Auto-generate employee number if not provided (for visitors/subcontractors)
         if (empty($validated['employee_number'])) {
@@ -124,10 +130,16 @@ class EmployeeController extends Controller
             'position' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
-            'accommodation' => 'nullable|string|max:255',
+            'accommodation' => 'nullable|array',
+            'accommodation.*' => 'nullable|string|max:255',
             'active_status' => 'required|in:active,inactive',
             'employee_status' => 'nullable|string|max:255',
         ]);
+
+        // Filter out empty accommodation entries
+        if (isset($validated['accommodation'])) {
+            $validated['accommodation'] = array_filter($validated['accommodation'], fn($value) => !empty($value));
+        }
 
         $employee->update($validated);
 

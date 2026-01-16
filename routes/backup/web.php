@@ -9,6 +9,10 @@ use App\Http\Controllers\HistoricalController;
 use App\Http\Controllers\BulkController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\LanguageController;
+
+// Language switch route
+Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
 
 // Auth routes (guest only)
 Route::middleware('guest')->group(function () {
@@ -32,6 +36,18 @@ Route::middleware(['auth', 'role'])->group(function () {
     // Dashboard & Historical - accessible by all authenticated users
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/historical', [HistoricalController::class, 'index'])->name('historical.index');
+    Route::get('/rooms', [\App\Http\Controllers\RoomDashboardController::class, 'index'])->name('rooms.dashboard');
+    Route::get('/rooms/manage', [\App\Http\Controllers\RoomDashboardController::class, 'manage'])->name('rooms.manage');
+    Route::get('/rooms/suggestions', [\App\Http\Controllers\RoomDashboardController::class, 'getRoomSuggestions'])->name('rooms.suggestions');
+    Route::get('/rooms/export', [\App\Http\Controllers\RoomDashboardController::class, 'exportExcel'])->name('rooms.export');
+    Route::post('/rooms/toggle-override', [\App\Http\Controllers\RoomDashboardController::class, 'toggleOverride'])->name('rooms.toggleOverride');
+    Route::post('/rooms/groups', [\App\Http\Controllers\RoomDashboardController::class, 'storeGroup'])->name('rooms.storeGroup');
+    Route::get('/rooms/groups/{id}/edit', [\App\Http\Controllers\RoomDashboardController::class, 'editGroup'])->name('rooms.editGroup');
+    Route::put('/rooms/groups/{id}', [\App\Http\Controllers\RoomDashboardController::class, 'updateGroup'])->name('rooms.updateGroup');
+    Route::delete('/rooms/groups/{id}', [\App\Http\Controllers\RoomDashboardController::class, 'destroyGroup'])->name('rooms.destroyGroup');
+    Route::get('/rooms/room/{id}/edit', [\App\Http\Controllers\RoomDashboardController::class, 'editRoom'])->name('rooms.editRoom');
+    Route::put('/rooms/room/{id}', [\App\Http\Controllers\RoomDashboardController::class, 'updateRoom'])->name('rooms.updateRoom');
+    Route::delete('/rooms/room/{id}', [\App\Http\Controllers\RoomDashboardController::class, 'destroyRoom'])->name('rooms.destroyRoom');
 
     // Historical edit/delete routes (super_admin and tim_catering only)
     Route::middleware('role:super_admin,tim_catering')->group(function () {
