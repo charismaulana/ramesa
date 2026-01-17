@@ -37,7 +37,9 @@
                 <div class="col-2">
                     <div class="form-group">
                         <label class="form-label" for="location">{{ __('messages.meal_location') }} *</label>
-                        <select name="location" id="location" class="form-control" required onchange="autoSelectProof()">
+                        <select name="location" id="location" class="form-control" required
+                            onchange="autoSelectProof(); reorderGroups();">
+                            <option value="">-- Select Location --</option>
                             <option value="Ramba">Ramba</option>
                             <option value="Bentayan">Bentayan</option>
                             <option value="Mangunjaya">Mangunjaya</option>
@@ -722,11 +724,11 @@
                 const url = selectedOption.dataset.url;
                 const filename = selectedOption.text;
                 document.getElementById('proof-status').innerHTML = `
-                                                                                    <span style="color: var(--success);">
-                                                                                        <i class="bi bi-check-circle"></i> Selected: ${filename}
-                                                                                        | <a href="${url}" target="_blank" style="color: var(--primary);">View</a>
-                                                                                    </span>
-                                                                                `;
+                                                                                                    <span style="color: var(--success);">
+                                                                                                        <i class="bi bi-check-circle"></i> Selected: ${filename}
+                                                                                                        | <a href="${url}" target="_blank" style="color: var(--primary);">View</a>
+                                                                                                    </span>
+                                                                                                `;
             } else {
                 hasProofSelected = false;
                 document.getElementById('proof-status').innerHTML = '';
@@ -742,10 +744,10 @@
                 if (select) select.value = '';
 
                 document.getElementById('proof-status').innerHTML = `
-                                                                                    <span style="color: var(--success);">
-                                                                                        <i class="bi bi-check-circle"></i> Uploaded: ${file.name}
-                                                                                    </span>
-                                                                                `;
+                                                                                                    <span style="color: var(--success);">
+                                                                                                        <i class="bi bi-check-circle"></i> Uploaded: ${file.name}
+                                                                                                    </span>
+                                                                                                `;
             } else {
                 hasProofSelected = false;
                 document.getElementById('proof-status').innerHTML = '';
@@ -843,42 +845,42 @@
             const supperChecked = meals.includes('supper') ? 'checked' : '';
 
             const entryHtml = `
-                                        <div class="entry-row has-meals" id="entry-${entryCount}">
-                                            <div class="entry-number">${entryCount}</div>
-                                            <div class="entry-content">
-                                                <div class="employee-select">
-                                                    <input type="hidden" name="entries[${entryCount}][visitor_name]" value="${visitorName}">
-                                                    <div class="selected-employee" style="display: flex; margin-top: 0;">
-                                                        <span><strong>👤 ${visitorName}</strong> <span style="color: var(--text-muted);">(Visitor)</span></span>
-                                                        <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="removeEntry(${entryCount})">
-                                                            <i class="bi bi-x"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="meal-checkboxes">
-                                                    <label class="meal-checkbox">
-                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast" ${breakfastChecked} onchange="updateRowHighlight(${entryCount})">
-                                                        <span>🌅 B'fast</span>
-                                                    </label>
-                                                    <label class="meal-checkbox">
-                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch" ${lunchChecked} onchange="updateRowHighlight(${entryCount})">
-                                                        <span>☀️ Lunch</span>
-                                                    </label>
-                                                    <label class="meal-checkbox">
-                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner" ${dinnerChecked} onchange="updateRowHighlight(${entryCount})">
-                                                        <span>🌙 Dinner</span>
-                                                    </label>
-                                                    <label class="meal-checkbox">
-                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper" ${supperChecked} onchange="updateRowHighlight(${entryCount})">
-                                                        <span>🌃 Supper</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    `;
+                                                        <div class="entry-row has-meals" id="entry-${entryCount}">
+                                                            <div class="entry-number">${entryCount}</div>
+                                                            <div class="entry-content">
+                                                                <div class="employee-select">
+                                                                    <input type="hidden" name="entries[${entryCount}][visitor_name]" value="${visitorName}">
+                                                                    <div class="selected-employee" style="display: flex; margin-top: 0;">
+                                                                        <span><strong>👤 ${visitorName}</strong> <span style="color: var(--text-muted);">(Visitor)</span></span>
+                                                                        <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="removeEntry(${entryCount})">
+                                                                            <i class="bi bi-x"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="meal-checkboxes">
+                                                                    <label class="meal-checkbox">
+                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast" ${breakfastChecked} onchange="updateRowHighlight(${entryCount})">
+                                                                        <span>🌅 B'fast</span>
+                                                                    </label>
+                                                                    <label class="meal-checkbox">
+                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch" ${lunchChecked} onchange="updateRowHighlight(${entryCount})">
+                                                                        <span>☀️ Lunch</span>
+                                                                    </label>
+                                                                    <label class="meal-checkbox">
+                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner" ${dinnerChecked} onchange="updateRowHighlight(${entryCount})">
+                                                                        <span>🌙 Dinner</span>
+                                                                    </label>
+                                                                    <label class="meal-checkbox">
+                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper" ${supperChecked} onchange="updateRowHighlight(${entryCount})">
+                                                                        <span>🌃 Supper</span>
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                            <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    `;
             container.insertAdjacentHTML('beforeend', entryHtml);
         }
 
@@ -891,50 +893,50 @@
             entryCount++;
             const container = document.getElementById('entries-container');
             const entryHtml = `
-                                                                                                                                                                                                                    <div class="entry-row" id="entry-${entryCount}">
-                                                                                                                                                                                                                        <div class="entry-number">${entryCount}</div>
-                                                                                                                                                                                                                        <div class="entry-content">
-                                                                                                                                                                                                                            <div class="employee-select">
-                                                                                                                                                                                                                                <div class="employee-search-container">
-                                                                                                                                                                                                                                    <input type="text" class="form-control employee-search" 
-                                                                                                                                                                                                                                        placeholder="Search employee..." 
-                                                                                                                                                                                                                                        onkeyup="searchEmployee(this, ${entryCount})"
-                                                                                                                                                                                                                                        onfocus="showSuggestions(${entryCount})"
-                                                                                                                                                                                                                                        data-entry="${entryCount}">
-                                                                                                                                                                                                                                    <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
-                                                                                                                                                                                                                                    <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
-                                                                                                                                                                                                                                </div>
-                                                                                                                                                                                                                                <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
-                                                                                                                                                                                                                                    <span id="selected-name-${entryCount}"></span>
-                                                                                                                                                                                                                                    <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
-                                                                                                                                                                                                                                        <i class="bi bi-x"></i>
-                                                                                                                                                                                                                                    </button>
-                                                                                                                                                                                                                                </div>
-                                                                                                                                                                                                                            </div>
-                                                                                                                                                                                                                            <div class="meal-checkboxes">
-                                                                                                                                                                                                                                <label class="meal-checkbox">
-                                                                                                                                                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast" onchange="updateRowHighlight(${entryCount})">
-                                                                                                                                                                                                                                    <span>🌅 B'fast</span>
-                                                                                                                                                                                                                                </label>
-                                                                                                                                                                                                                                <label class="meal-checkbox">
-                                                                                                                                                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch" onchange="updateRowHighlight(${entryCount})">
-                                                                                                                                                                                                                                    <span>☀️ Lunch</span>
-                                                                                                                                                                                                                                </label>
-                                                                                                                                                                                                                                <label class="meal-checkbox">
-                                                                                                                                                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner" onchange="updateRowHighlight(${entryCount})">
-                                                                                                                                                                                                                                    <span>🌙 Dinner</span>
-                                                                                                                                                                                                                                </label>
-                                                                                                                                                                                                                                <label class="meal-checkbox">
-                                                                                                                                                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper" onchange="updateRowHighlight(${entryCount})">
-                                                                                                                                                                                                                                    <span>🌃 Supper</span>
-                                                                                                                                                                                                                                </label>
-                                                                                                                                                                                                                            </div>
-                                                                                                                                                                                                                        </div>
-                                                                                                                                                                                                                        <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
-                                                                                                                                                                                                                            <i class="bi bi-trash"></i>
-                                                                                                                                                                                                                        </button>
-                                                                                                                                                                                                                    </div>
-                                                                                                                                                                                                                `;
+                                                                                                                                                                                                                                    <div class="entry-row" id="entry-${entryCount}">
+                                                                                                                                                                                                                                        <div class="entry-number">${entryCount}</div>
+                                                                                                                                                                                                                                        <div class="entry-content">
+                                                                                                                                                                                                                                            <div class="employee-select">
+                                                                                                                                                                                                                                                <div class="employee-search-container">
+                                                                                                                                                                                                                                                    <input type="text" class="form-control employee-search" 
+                                                                                                                                                                                                                                                        placeholder="Search employee..." 
+                                                                                                                                                                                                                                                        onkeyup="searchEmployee(this, ${entryCount})"
+                                                                                                                                                                                                                                                        onfocus="showSuggestions(${entryCount})"
+                                                                                                                                                                                                                                                        data-entry="${entryCount}">
+                                                                                                                                                                                                                                                    <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
+                                                                                                                                                                                                                                                    <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
+                                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
+                                                                                                                                                                                                                                                    <span id="selected-name-${entryCount}"></span>
+                                                                                                                                                                                                                                                    <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
+                                                                                                                                                                                                                                                        <i class="bi bi-x"></i>
+                                                                                                                                                                                                                                                    </button>
+                                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                            <div class="meal-checkboxes">
+                                                                                                                                                                                                                                                <label class="meal-checkbox">
+                                                                                                                                                                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast" onchange="updateRowHighlight(${entryCount})">
+                                                                                                                                                                                                                                                    <span>🌅 B'fast</span>
+                                                                                                                                                                                                                                                </label>
+                                                                                                                                                                                                                                                <label class="meal-checkbox">
+                                                                                                                                                                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch" onchange="updateRowHighlight(${entryCount})">
+                                                                                                                                                                                                                                                    <span>☀️ Lunch</span>
+                                                                                                                                                                                                                                                </label>
+                                                                                                                                                                                                                                                <label class="meal-checkbox">
+                                                                                                                                                                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner" onchange="updateRowHighlight(${entryCount})">
+                                                                                                                                                                                                                                                    <span>🌙 Dinner</span>
+                                                                                                                                                                                                                                                </label>
+                                                                                                                                                                                                                                                <label class="meal-checkbox">
+                                                                                                                                                                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper" onchange="updateRowHighlight(${entryCount})">
+                                                                                                                                                                                                                                                    <span>🌃 Supper</span>
+                                                                                                                                                                                                                                                </label>
+                                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                        </div>
+                                                                                                                                                                                                                                        <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
+                                                                                                                                                                                                                                            <i class="bi bi-trash"></i>
+                                                                                                                                                                                                                                        </button>
+                                                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                                                `;
             container.insertAdjacentHTML('beforeend', entryHtml);
             updateNoEntriesMessage();
 
@@ -986,11 +988,11 @@
             if (entries.length === 0) {
                 if (!noEntriesEl) {
                     container.innerHTML = `
-                                                                                                                                                                                                                            <div class="no-entries">
-                                                                                                                                                                                                                                <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                                                                                                                                                                                                                <p>No entries yet. Click "Add Entry" to start.</p>
-                                                                                                                                                                                                                            </div>
-                                                                                                                                                                                                                        `;
+                                                                                                                                                                                                                                            <div class="no-entries">
+                                                                                                                                                                                                                                                <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                                                                                                                                                                                                                                <p>No entries yet. Click "Add Entry" to start.</p>
+                                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                        `;
                 }
             } else {
                 if (noEntriesEl) {
@@ -1019,20 +1021,20 @@
                 html = '<div class="employee-suggestion" style="color: var(--text-muted);">No employees found</div>';
             } else {
                 html = filtered.map(emp => `
-                                                                                                                                <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
-                                                                                                                                    <strong>${emp.employee_number}</strong> - ${emp.name}
-                                                                                                                                    <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
-                                                                                                                                </div>
-                                                                                                                            `).join('');
+                                                                                                                                                <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
+                                                                                                                                                    <strong>${emp.employee_number}</strong> - ${emp.name}
+                                                                                                                                                    <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
+                                                                                                                                                </div>
+                                                                                                                                            `).join('');
             }
 
             // Always show "Add New Employee" option
             html += `
-                                                                                                                            <div class="employee-suggestion" onclick="openQuickAddEmployee(${entryIndex})" style="background: rgba(255,69,0,0.1); border-top: 1px solid var(--primary);">
-                                                                                                                                <i class="bi bi-plus-circle" style="color: var(--primary);"></i>
-                                                                                                                                <strong style="color: var(--primary);"> + Add New Employee</strong>
-                                                                                                                            </div>
-                                                                                                                        `;
+                                                                                                                                            <div class="employee-suggestion" onclick="openQuickAddEmployee(${entryIndex})" style="background: rgba(255,69,0,0.1); border-top: 1px solid var(--primary);">
+                                                                                                                                                <i class="bi bi-plus-circle" style="color: var(--primary);"></i>
+                                                                                                                                                <strong style="color: var(--primary);"> + Add New Employee</strong>
+                                                                                                                                            </div>
+                                                                                                                                        `;
 
             suggestionsEl.innerHTML = html;
             suggestionsEl.style.display = 'block';
@@ -1195,6 +1197,33 @@
             }
         }
 
+        // Reorder groups based on selected location - matching groups go to top
+        function reorderGroups() {
+            const locationSelect = document.getElementById('location');
+            const groupSelector = document.getElementById('groupSelector');
+
+            if (!groupSelector || !locationSelect) return;
+
+            const selectedLocation = locationSelect.value.toLowerCase();
+            const options = Array.from(groupSelector.options);
+
+            // Separate into matching and non-matching groups
+            const defaultOption = options.find(opt => opt.value === '');
+            const matchingGroups = options.filter(opt => opt.value !== '' && opt.text.toLowerCase().includes(selectedLocation));
+            const otherGroups = options.filter(opt => opt.value !== '' && !opt.text.toLowerCase().includes(selectedLocation));
+
+            // Clear and re-add in new order
+            groupSelector.innerHTML = '';
+            if (defaultOption) groupSelector.appendChild(defaultOption);
+            matchingGroups.forEach(opt => groupSelector.appendChild(opt));
+            otherGroups.forEach(opt => groupSelector.appendChild(opt));
+        }
+
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            reorderGroups();
+        });
+
         // Load Group function
         function loadGroup() {
             const selector = document.getElementById('groupSelector');
@@ -1297,25 +1326,25 @@
             }
 
             groupsList.innerHTML = allGroups.map(group => `
-                                                                                                                                                                    <div style="padding: 1rem; border: 1px solid var(--card-border); border-radius: 8px; margin-bottom: 0.75rem; background: rgba(255,255,255,0.02);">
-                                                                                                                                                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                                                                                                                                            <div>
-                                                                                                                                                                                <strong style="color: var(--primary);">${group.name}</strong>
-                                                                                                                                                                                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
-                                                                                                                                                                                    ${group.employees.length} employees
-                                                                                                                                                                                </p>
-                                                                                                                                                                            </div>
-                                                                                                                                                                            <div style="display: flex; gap: 0.5rem;">
-                                                                                                                                                                                <button class="btn btn-secondary btn-sm" onclick="editGroup(${group.id})">
-                                                                                                                                                                                    <i class="bi bi-pencil"></i> Edit
-                                                                                                                                                                                </button>
-                                                                                                                                                                                <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id}, '${group.name}')">
-                                                                                                                                                                                    <i class="bi bi-trash"></i> Delete
-                                                                                                                                                                                </button>
-                                                                                                                                                                            </div>
-                                                                                                                                                                        </div>
-                                                                                                                                                                    </div>
-                                                                                                                                                                `).join('');
+                                                                                                                                                                                    <div style="padding: 1rem; border: 1px solid var(--card-border); border-radius: 8px; margin-bottom: 0.75rem; background: rgba(255,255,255,0.02);">
+                                                                                                                                                                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                                                                                                                                                            <div>
+                                                                                                                                                                                                <strong style="color: var(--primary);">${group.name}</strong>
+                                                                                                                                                                                                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
+                                                                                                                                                                                                    ${group.employees.length} employees
+                                                                                                                                                                                                </p>
+                                                                                                                                                                                            </div>
+                                                                                                                                                                                            <div style="display: flex; gap: 0.5rem;">
+                                                                                                                                                                                                <button class="btn btn-secondary btn-sm" onclick="editGroup(${group.id})">
+                                                                                                                                                                                                    <i class="bi bi-pencil"></i> Edit
+                                                                                                                                                                                                </button>
+                                                                                                                                                                                                <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id}, '${group.name}')">
+                                                                                                                                                                                                    <i class="bi bi-trash"></i> Delete
+                                                                                                                                                                                                </button>
+                                                                                                                                                                                            </div>
+                                                                                                                                                                                        </div>
+                                                                                                                                                                                    </div>
+                                                                                                                                                                                `).join('');
         }
 
         async function saveGroup() {
@@ -1533,23 +1562,23 @@
             emptyMessage.style.display = 'none';
 
             container.innerHTML = selectedMembers.map((member, index) => `
-                                                                                                                                <div class="selected-member-item" 
-                                                                                                                                    draggable="true" 
-                                                                                                                                    data-id="${member.id}"
-                                                                                                                                    data-index="${index}"
-                                                                                                                                    ondragstart="dragStart(event)" 
-                                                                                                                                    ondragover="dragOver(event)" 
-                                                                                                                                    ondrop="drop(event)"
-                                                                                                                                    ondragend="dragEnd(event)"
-                                                                                                                                    style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--card-border); background: rgba(255,255,255,0.02); cursor: move; font-size: 0.85rem;">
-                                                                                                                                    <i class="bi bi-grip-vertical" style="color: var(--text-muted); cursor: grab;"></i>
-                                                                                                                                    <span style="flex: 1;">${member.number} - ${member.name} (${member.dept})</span>
-                                                                                                                                    <button type="button" onclick="removeEmployeeFromSelected(${member.id})" 
-                                                                                                                                        style="padding: 0.2rem 0.5rem; background: #dc3545; border: none; color: white; border-radius: 4px; cursor: pointer;">
-                                                                                                                                        <i class="bi bi-arrow-left"></i> Remove
-                                                                                                                                    </button>
-                                                                                                                                </div>
-                                                                                                                            `).join('');
+                                                                                                                                                <div class="selected-member-item" 
+                                                                                                                                                    draggable="true" 
+                                                                                                                                                    data-id="${member.id}"
+                                                                                                                                                    data-index="${index}"
+                                                                                                                                                    ondragstart="dragStart(event)" 
+                                                                                                                                                    ondragover="dragOver(event)" 
+                                                                                                                                                    ondrop="drop(event)"
+                                                                                                                                                    ondragend="dragEnd(event)"
+                                                                                                                                                    style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--card-border); background: rgba(255,255,255,0.02); cursor: move; font-size: 0.85rem;">
+                                                                                                                                                    <i class="bi bi-grip-vertical" style="color: var(--text-muted); cursor: grab;"></i>
+                                                                                                                                                    <span style="flex: 1;">${member.number} - ${member.name} (${member.dept})</span>
+                                                                                                                                                    <button type="button" onclick="removeEmployeeFromSelected(${member.id})" 
+                                                                                                                                                        style="padding: 0.2rem 0.5rem; background: #dc3545; border: none; color: white; border-radius: 4px; cursor: pointer;">
+                                                                                                                                                        <i class="bi bi-arrow-left"></i> Remove
+                                                                                                                                                    </button>
+                                                                                                                                                </div>
+                                                                                                                                            `).join('');
         }
 
         // Drag and Drop Functions
