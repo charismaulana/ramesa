@@ -291,4 +291,60 @@ class EmployeeController extends Controller
             ->header('Content-Type', 'image/png')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
+
+    /**
+     * Merge records from source employee to target employee
+     */
+    public function mergeRecords(Request $request)
+    {
+        $validated = $request->validate([
+            'source_id' => 'required|exists:employees,id',
+            'target_id' => 'required|exists:employees,id|different:source_id',
+            'delete_source' => 'nullable|boolean',
+        ]);
+
+        $sourceEmployee = Employee::findOrFail($validated['source_id']);
+        $targetEmployee = Employee::findOrFail($validated['target_id']);
+
+        // Count records before transfer
+        $recordCount = \App\Models\Attendance::where('employee_id', $sourceEmployee->id)->count();
+
+        if ($recordCount === 0) {
+            return back()->with('error', 'Source employee has no meal records to transfer.');
+        }
+
+        // Transfer all attendance records
+        \App\Models\Attendance::where('employee_id', $sourceEmployee->id)
+            ->update(['employee_id' => $targetEmployee->id]);
+
+        $message = "Successfully transferred {$recordCount} meal records from '{$sourceEmployee->name}' (#{$sourceEmployee->employee_number}) to '{$targetEmployee->name}' (#{$targetEmployee->employee_number}).";
+
+        // Optionally delete source employee
+        if ($request->input('delete_source')) {
+            $sourceEmployee->delete();
+            $message .= " Source employee has been deleted.";
+        }
+
+        return redirect()->route('employees.index')->with('success', $message);
+    }
+
+    /**
+     * Get employees for merge modal (AJAX)
+     */
+    public function getMergeOptions(Request $request)
+    {
+        $search = $request->get('search', '');
+        $excludeId = $request->get('exclude_id');
+
+        $employees = Employee::where('id', '!=', $excludeId)
+            ->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('employee_number', 'like', "%{$search}%");
+            })
+            ->orderBy('name')
+            ->limit(50)
+            ->get(['id', 'employee_number', 'name', 'department', 'employee_status']);
+
+        return response()->json($employees);
+    }
 }

@@ -871,13 +871,20 @@
             <button class="mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('active')">
                 <i class="bi bi-list"></i>
             </button>
-
+            
             <ul class="nav-links">
                 <li>
                     <a href="{{ route('dashboard') }}"
                         class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                         <i class="bi bi-speedometer2"></i>
-                        Dashboard
+                        {{ __('messages.dashboard') }}
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('rooms.dashboard') }}"
+                        class="nav-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}">
+                        <i class="bi bi-building"></i>
+                        {{ __('messages.rooms') }}
                     </a>
                 </li>
                 @if(auth()->user()->canAccessFullFeatures())
@@ -885,13 +892,13 @@
                         <a href="#"
                             class="nav-link {{ request()->routeIs('scan.*') || request()->routeIs('bulk.*') ? 'active' : '' }}">
                             <i class="bi bi-qr-code-scan"></i>
-                            Scan
+                            {{ __('messages.scan') }}
                             <i class="bi bi-chevron-down" style="font-size: 0.8rem;"></i>
                         </a>
                         <div class="dropdown-menu">
                             <a href="{{ route('scan.index') }}" class="dropdown-item">
                                 <i class="bi bi-camera"></i>
-                                QR Scan Station
+                                {{ __('messages.qr_scan_station') }}
                             </a>
                             {{-- Hidden: Manual Entry
                             <a href="{{ route('scan.manual') }}" class="dropdown-item">
@@ -901,24 +908,24 @@
                             --}}
                             <a href="{{ route('bulk.index') }}" class="dropdown-item">
                                 <i class="bi bi-list-check"></i>
-                                Bulk Input
+                                {{ __('messages.bulk_input') }}
                             </a>
                         </div>
                     </li>
                     <li class="nav-dropdown">
                         <a href="#" class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}">
                             <i class="bi bi-people"></i>
-                            Employee
+                            {{ __('messages.employees') }}
                             <i class="bi bi-chevron-down" style="font-size: 0.8rem;"></i>
                         </a>
                         <div class="dropdown-menu">
                             <a href="{{ route('employees.index') }}" class="dropdown-item">
                                 <i class="bi bi-list-ul"></i>
-                                Employee List
+                                {{ __('messages.employee_list') }}
                             </a>
                             <a href="{{ route('employees.create') }}" class="dropdown-item">
                                 <i class="bi bi-person-plus"></i>
-                                Add Employee
+                                {{ __('messages.add_employee') }}
                             </a>
                         </div>
                     </li>
@@ -927,18 +934,18 @@
                     <a href="#"
                         class="nav-link {{ request()->routeIs('historical.*') || request()->routeIs('report.*') ? 'active' : '' }}">
                         <i class="bi bi-clock-history"></i>
-                        Historical
+                        {{ __('messages.recap') }}
                         <i class="bi bi-chevron-down" style="font-size: 0.8rem;"></i>
                     </a>
                     <div class="dropdown-menu">
                         <a href="{{ route('historical.index') }}" class="dropdown-item">
                             <i class="bi bi-table"></i>
-                            View Records
+                            {{ __('messages.view_records') }}
                         </a>
                         @if(auth()->user()->canAccessFullFeatures())
                             <a href="{{ route('historical.exportForm') }}" class="dropdown-item">
                                 <i class="bi bi-file-earmark-excel"></i>
-                                Export Excel
+                                {{ __('messages.export_excel') }}
                             </a>
                             {{-- Hidden: Print PDF
                             <a href="{{ route('report.form') }}" class="dropdown-item">
@@ -953,22 +960,40 @@
                     <li class="nav-dropdown">
                         <a href="#" class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}">
                             <i class="bi bi-shield-lock"></i>
-                            Admin
+                            {{ __('messages.admin') }}
                             <i class="bi bi-chevron-down" style="font-size: 0.8rem;"></i>
                         </a>
                         <div class="dropdown-menu">
                             <a href="{{ route('admin.users') }}" class="dropdown-item">
                                 <i class="bi bi-people"></i>
-                                User Management
+                                {{ __('messages.user_management') }}
                             </a>
                             <a href="{{ route('admin.lockedPeriods') }}" class="dropdown-item">
                                 <i class="bi bi-lock"></i>
-                                Lock Periods
+                                {{ __('messages.lock_periods') }}
                             </a>
                         </div>
                     </li>
                 @endif
             </ul>
+            
+            <!-- Language Switcher -->
+            <div class="nav-dropdown" style="margin-right: 0.5rem;">
+                <a href="#" class="nav-link" style="padding: 0.5rem 0.75rem;">
+                    <i class="bi bi-translate"></i>
+                    {{ app()->getLocale() == 'id' ? 'ID' : 'EN' }}
+                    <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+                </a>
+                <div class="dropdown-menu" style="right: 0; left: auto; min-width: 120px;">
+                    <a href="{{ route('language.switch', 'en') }}" class="dropdown-item {{ app()->getLocale() == 'en' ? 'active' : '' }}">
+                        🇬🇧 English
+                    </a>
+                    <a href="{{ route('language.switch', 'id') }}" class="dropdown-item {{ app()->getLocale() == 'id' ? 'active' : '' }}">
+                        🇮🇩 Indonesia
+                    </a>
+                </div>
+            </div>
+            
             <div class="nav-dropdown">
                 <a href="#" class="nav-link">
                     <i class="bi bi-person-circle"></i>
@@ -991,7 +1016,7 @@
                         <button type="submit" class="dropdown-item"
                             style="width: 100%; border: none; background: none; cursor: pointer; text-align: left;">
                             <i class="bi bi-box-arrow-right"></i>
-                            Logout
+                            {{ __('messages.logout') }}
                         </button>
                     </form>
                 </div>

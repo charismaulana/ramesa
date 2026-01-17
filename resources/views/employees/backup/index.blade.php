@@ -172,8 +172,8 @@
                                 @if($employee->accommodation && count($employee->accommodation) > 0)
                                     @php
                                         $rooms = [];
-                                        foreach($employee->accommodation as $loc => $room) {
-                                            if(!empty($room)) {
+                                        foreach ($employee->accommodation as $loc => $room) {
+                                            if (!empty($room)) {
                                                 $rooms[] = strtoupper(substr($loc, 0, 1)) . ': ' . $room;
                                             }
                                         }
@@ -204,6 +204,10 @@
                                         title="Print Card">
                                         <i class="bi bi-credit-card"></i>
                                     </a>
+                                    <button type="button" class="btn btn-secondary btn-sm" title="Transfer Records"
+                                        onclick="openMergeModal({{ $employee->id }}, '{{ addslashes($employee->employee_number) }}', '{{ addslashes($employee->name) }}')">
+                                        <i class="bi bi-arrow-right-circle"></i>
+                                    </button>
                                     <form action="{{ route('employees.destroy', $employee) }}" method="POST"
                                         style="display: inline;" onsubmit="return confirm('Delete this employee?')">
                                         @csrf
@@ -282,4 +286,190 @@
             </div>
         @endif
     </div>
+
+    <!-- Merge Records Modal -->
+    <div id="mergeModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="bi bi-arrow-right-circle"></i> Transfer Meal Records</h3>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeMergeModal()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <form action="{{ route('employees.mergeRecords') }}" method="POST" id="mergeForm">
+                @csrf
+                <input type="hidden" name="source_id" id="merge_source_id">
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label">Transfer FROM:</label>
+                    <div id="source_info"
+                        style="padding: 0.75rem; background: rgba(255, 100, 100, 0.1); border-radius: 8px; border: 1px solid rgba(255, 100, 100, 0.3);">
+                        <strong id="source_name">-</strong>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;" id="source_number"></span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label">Transfer TO: *</label>
+                    <input type="text" id="target_search" class="form-control" placeholder="Search employee name or ID..."
+                        oninput="searchTargetEmployees()" autocomplete="off">
+                    <div id="target_results"
+                        style="max-height: 200px; overflow-y: auto; margin-top: 0.5rem; display: none;">
+                        <!-- Results will be populated here -->
+                    </div>
+                    <input type="hidden" name="target_id" id="merge_target_id" required>
+                    <div id="target_info"
+                        style="display: none; margin-top: 0.5rem; padding: 0.75rem; background: rgba(100, 255, 100, 0.1); border-radius: 8px; border: 1px solid rgba(100, 255, 100, 0.3);">
+                        <strong id="target_name">-</strong>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;" id="target_number"></span>
+                        <button type="button" class="btn btn-secondary btn-sm" style="float: right;"
+                            onclick="clearTargetSelection()">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group"
+                    style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(255, 165, 0, 0.1); border-radius: 8px;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--accent);">
+                        <input type="checkbox" name="delete_source" value="1" style="accent-color: var(--primary);">
+                        Delete source employee after transfer
+                    </label>
+                </div>
+
+                <div class="alert"
+                    style="background: rgba(255, 69, 0, 0.1); border: 1px solid rgba(255, 69, 0, 0.3); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Warning:</strong> This will transfer ALL meal records from the source employee to the target.
+                    This action cannot be undone!
+                </div>
+
+                <div class="d-flex gap-1">
+                    <button type="submit" class="btn btn-primary" id="mergeSubmitBtn" disabled>
+                        <i class="bi bi-arrow-right-circle"></i> Transfer Records
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeMergeModal()">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
+
+@push('styles')
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 1);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg, #1a1a1a);
+            border: 1px solid var(--card-border, #333);
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--card-border, #333);
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+    </style>
+@endpush
+
+@push('scripts')
+    <script>
+        let searchTimeout;
+
+        function openMergeModal(sourceId, sourceNumber, sourceName) {
+            document.getElementById('merge_source_id').value = sourceId;
+            document.getElementById('source_name').textContent = sourceName;
+            document.getElementById('source_number').textContent = ' (#' + sourceNumber + ')';
+            document.getElementById('target_search').value = '';
+            document.getElementById('merge_target_id').value = '';
+            document.getElementById('target_info').style.display = 'none';
+            document.getElementById('target_results').style.display = 'none';
+            document.getElementById('mergeSubmitBtn').disabled = true;
+            document.getElementById('mergeModal').style.display = 'flex';
+        }
+
+        function closeMergeModal() {
+            document.getElementById('mergeModal').style.display = 'none';
+        }
+
+        function searchTargetEmployees() {
+            clearTimeout(searchTimeout);
+            const search = document.getElementById('target_search').value;
+            const sourceId = document.getElementById('merge_source_id').value;
+
+            if (search.length < 2) {
+                document.getElementById('target_results').style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`{{ route('employees.mergeOptions') }}?search=${encodeURIComponent(search)}&exclude_id=${sourceId}`)
+                    .then(response => response.json())
+                    .then(employees => {
+                        const resultsDiv = document.getElementById('target_results');
+                        if (employees.length === 0) {
+                            resultsDiv.innerHTML = '<div style="padding: 0.75rem; color: var(--text-muted);">No employees found</div>';
+                        } else {
+                            resultsDiv.innerHTML = employees.map(emp => `
+                                                        <div class="search-result-item" onclick="selectTargetEmployee(${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${emp.department || ''}')"
+                                                            style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--card-border); transition: background 0.2s;"
+                                                            onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+                                                            <strong>${emp.name}</strong>
+                                                            <span style="color: var(--text-muted); font-size: 0.85rem;">#${emp.employee_number}</span>
+                                                            <span style="color: var(--accent); font-size: 0.75rem; margin-left: 0.5rem;">${emp.employee_status || ''}</span>
+                                                        </div>
+                                                    `).join('');
+                        }
+                        resultsDiv.style.display = 'block';
+                    });
+            }, 300);
+        }
+
+        function selectTargetEmployee(id, number, name, department) {
+            document.getElementById('merge_target_id').value = id;
+            document.getElementById('target_name').textContent = name;
+            document.getElementById('target_number').textContent = ' (#' + number + ') ' + department;
+            document.getElementById('target_info').style.display = 'block';
+            document.getElementById('target_results').style.display = 'none';
+            document.getElementById('target_search').style.display = 'none';
+            document.getElementById('mergeSubmitBtn').disabled = false;
+        }
+
+        function clearTargetSelection() {
+            document.getElementById('merge_target_id').value = '';
+            document.getElementById('target_info').style.display = 'none';
+            document.getElementById('target_search').style.display = 'block';
+            document.getElementById('target_search').value = '';
+            document.getElementById('mergeSubmitBtn').disabled = true;
+        }
+
+        // Close modal on outside click
+        document.getElementById('mergeModal').addEventListener('click', function (e) {
+            if (e.target === this) closeMergeModal();
+        });
+    </script>
+@endpush

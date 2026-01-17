@@ -871,7 +871,7 @@
             <button class="mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('active')">
                 <i class="bi bi-list"></i>
             </button>
-            
+
             <ul class="nav-links">
                 <li>
                     <a href="{{ route('dashboard') }}"
@@ -976,7 +976,7 @@
                     </li>
                 @endif
             </ul>
-            
+
             <!-- Language Switcher -->
             <div class="nav-dropdown" style="margin-right: 0.5rem;">
                 <a href="#" class="nav-link" style="padding: 0.5rem 0.75rem;">
@@ -985,15 +985,17 @@
                     <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
                 </a>
                 <div class="dropdown-menu" style="right: 0; left: auto; min-width: 120px;">
-                    <a href="{{ route('language.switch', 'en') }}" class="dropdown-item {{ app()->getLocale() == 'en' ? 'active' : '' }}">
+                    <a href="{{ route('language.switch', 'en') }}"
+                        class="dropdown-item {{ app()->getLocale() == 'en' ? 'active' : '' }}">
                         🇬🇧 English
                     </a>
-                    <a href="{{ route('language.switch', 'id') }}" class="dropdown-item {{ app()->getLocale() == 'id' ? 'active' : '' }}">
+                    <a href="{{ route('language.switch', 'id') }}"
+                        class="dropdown-item {{ app()->getLocale() == 'id' ? 'active' : '' }}">
                         🇮🇩 Indonesia
                     </a>
                 </div>
             </div>
-            
+
             <div class="nav-dropdown">
                 <a href="#" class="nav-link">
                     <i class="bi bi-person-circle"></i>
@@ -1055,6 +1057,7 @@
                                     <th>Location</th>
                                     <th>Meal Type</th>
                                     <th>Date</th>
+                                    <th>Proof</th>
                                     <th>Reason</th>
                                 </tr>
                             </thead>
@@ -1067,6 +1070,17 @@
                                         <td>{{ $record['location'] ?? '-' }}</td>
                                         <td>{{ $record['meal_type'] }}</td>
                                         <td>{{ $record['date'] }}</td>
+                                        <td>
+                                            @if(!empty($record['absence_proof']))
+                                                <a href="{{ Storage::disk('public_direct')->url($record['absence_proof']) }}"
+                                                    target="_blank" class="btn btn-primary btn-sm"
+                                                    style="padding: 0.15rem 0.35rem; font-size: 0.7rem;">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
                                         <td><span class="badge badge-warning">{{ $record['reason'] }}</span></td>
                                     </tr>
                                 @endforeach

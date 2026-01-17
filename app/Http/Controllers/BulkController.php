@@ -167,6 +167,7 @@ class BulkController extends Controller
                         'location' => $existingAttendance->location, // Show location from existing record
                         'meal_type' => ucfirst($mealType),
                         'date' => $date->format('d/m/Y'),
+                        'absence_proof' => $existingAttendance->absence_proof, // Include proof link
                         'reason' => 'Duplicate'
                     ];
                     continue;

@@ -18,19 +18,21 @@ class BulkController extends Controller
 
         $groups = EmployeeGroup::with('employees:id,name,employee_number,department,employee_status')->get();
 
-        // Get recent absence proof files from the last 30 days
+        // Get recent absence proof files from the last 30 days with date and location
         $recentProofs = Attendance::whereNotNull('absence_proof')
             ->where('scanned_at', '>=', now()->subDays(30))
-            ->select('absence_proof')
-            ->distinct()
+            ->select('absence_proof', 'location', \DB::raw('DATE(scanned_at) as proof_date'))
+            ->groupBy('absence_proof', 'location', \DB::raw('DATE(scanned_at)'))
             ->orderBy('scanned_at', 'desc')
             ->limit(50)
-            ->pluck('absence_proof')
-            ->map(function ($path) {
+            ->get()
+            ->map(function ($item) {
                 return [
-                    'path' => $path,
-                    'filename' => basename($path),
-                    'url' => \Storage::disk('public_direct')->url($path)
+                    'path' => $item->absence_proof,
+                    'filename' => basename($item->absence_proof),
+                    'url' => \Storage::disk('public_direct')->url($item->absence_proof),
+                    'date' => $item->proof_date,
+                    'location' => $item->location,
                 ];
             });
 
