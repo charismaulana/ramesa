@@ -91,18 +91,27 @@
                                 $mealCount = $locationData[$dateStr] ?? 0;
                                 $isToday = $dateStr == $today;
                                 $isFuture = $dateStr > $today;
+                                $isLocked = isset($lockedDates[$location][$dateStr]);
 
                                 if ($isFuture) {
                                     $bgColor = 'rgba(128, 128, 128, 0.1)';
+                                } elseif ($isLocked && $hasData) {
+                                    $bgColor = 'rgba(255, 69, 0, 0.6)'; // Orange-red for locked with data
+                                } elseif ($isLocked) {
+                                    $bgColor = 'rgba(255, 69, 0, 0.3)'; // Light orange for locked no data
                                 } elseif ($hasData) {
                                     $bgColor = 'rgba(0, 200, 83, 0.4)';
                                 } else {
                                     $bgColor = 'rgba(100, 100, 100, 0.2)';
                                 }
+
+                                $tooltip = $hasData ? $mealCount . ' meals' : 'No data';
+                                if ($isLocked)
+                                    $tooltip .= ' (🔒 Locked)';
                             @endphp
                             <a href="{{ route('dashboard', ['date_from' => $dateStr, 'date_to' => $dateStr]) }}"
                                 style="aspect-ratio: 1; background: {{ $bgColor }}; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; text-decoration: none; color: inherit; {{ $isToday ? 'border: 1px solid var(--primary);' : '' }}"
-                                title="{{ $hasData ? $mealCount . ' meals' : 'No data' }}">
+                                title="{{ $tooltip }}">
                                 {{ $day }}
                             </a>
                         @endfor
@@ -121,6 +130,10 @@
             <div style="display: flex; align-items: center; gap: 0.25rem;">
                 <div style="width: 12px; height: 12px; background: rgba(100, 100, 100, 0.2); border-radius: 2px;"></div>
                 <span>No Data</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                <div style="width: 12px; height: 12px; background: rgba(255, 69, 0, 0.5); border-radius: 2px;"></div>
+                <span>🔒 Locked</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.25rem;">
                 <div style="width: 12px; height: 12px; border: 1px solid var(--primary); border-radius: 2px;"></div>
@@ -470,12 +483,12 @@
 @endpush
 
 @push('scripts')
-<script>
-    function changeCalendarMonth() {
-        const month = document.getElementById('calendarMonth').value;
-        const url = new URL(window.location.href);
-        url.searchParams.set('calendar_month', month);
-        window.location.href = url.toString();
-    }
-</script>
+    <script>
+        function changeCalendarMonth() {
+            const month = document.getElementById('calendarMonth').value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('calendar_month', month);
+            window.location.href = url.toString();
+        }
+    </script>
 @endpush

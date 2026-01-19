@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\Attendance;
 use App\Models\MealPrice;
+use App\Models\LockedPeriod;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -96,6 +97,28 @@ class DashboardController extends Controller
                 ->toArray();
         }
 
+        // Get locked dates per location for the calendar month
+        $lockedDates = [];
+        foreach ($locations as $location) {
+            $lockedDates[$location] = [];
+            $lockedPeriods = LockedPeriod::where(function ($q) use ($location) {
+                $q->whereNull('location')->orWhere('location', $location);
+            })
+                ->where('start_date', '<=', $calendarEnd)
+                ->where('end_date', '>=', $calendarStart)
+                ->get();
+
+            foreach ($lockedPeriods as $period) {
+                $start = max($period->start_date, $calendarStart);
+                $end = min($period->end_date, $calendarEnd);
+                $current = Carbon::parse($start);
+                while ($current <= $end) {
+                    $lockedDates[$location][$current->format('Y-m-d')] = true;
+                    $current->addDay();
+                }
+            }
+        }
+
         return view('dashboard.index', compact(
             'statsByLocation',
             'totalStats',
@@ -112,7 +135,8 @@ class DashboardController extends Controller
             'calendarData',
             'calendarMonth',
             'calendarStart',
-            'calendarEnd'
+            'calendarEnd',
+            'lockedDates'
         ));
     }
 
