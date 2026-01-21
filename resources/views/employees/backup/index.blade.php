@@ -6,10 +6,16 @@
             <h1 class="page-title">EMPLOYEE LIST</h1>
             <p class="page-subtitle">Manage all employee records</p>
         </div>
-        <a href="{{ route('employees.create') }}" class="btn btn-primary">
-            <i class="bi bi-person-plus"></i>
-            Add Employee
-        </a>
+        <div class="d-flex gap-1">
+            <a href="{{ route('employees.exportPobForm') }}" class="btn btn-secondary">
+                <i class="bi bi-file-earmark-excel"></i>
+                Export POB
+            </a>
+            <a href="{{ route('employees.create') }}" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i>
+                Add Employee
+            </a>
+        </div>
     </div>
 
     <div class="card">
@@ -435,14 +441,14 @@
                             resultsDiv.innerHTML = '<div style="padding: 0.75rem; color: var(--text-muted);">No employees found</div>';
                         } else {
                             resultsDiv.innerHTML = employees.map(emp => `
-                                                        <div class="search-result-item" onclick="selectTargetEmployee(${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${emp.department || ''}')"
-                                                            style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--card-border); transition: background 0.2s;"
-                                                            onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
-                                                            <strong>${emp.name}</strong>
-                                                            <span style="color: var(--text-muted); font-size: 0.85rem;">#${emp.employee_number}</span>
-                                                            <span style="color: var(--accent); font-size: 0.75rem; margin-left: 0.5rem;">${emp.employee_status || ''}</span>
-                                                        </div>
-                                                    `).join('');
+                                                            <div class="search-result-item" onclick="selectTargetEmployee(${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${emp.department || ''}')"
+                                                                style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--card-border); transition: background 0.2s;"
+                                                                onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+                                                                <strong>${emp.name}</strong>
+                                                                <span style="color: var(--text-muted); font-size: 0.85rem;">#${emp.employee_number}</span>
+                                                                <span style="color: var(--accent); font-size: 0.75rem; margin-left: 0.5rem;">${emp.employee_status || ''}</span>
+                                                            </div>
+                                                        `).join('');
                         }
                         resultsDiv.style.display = 'block';
                     });

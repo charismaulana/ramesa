@@ -661,11 +661,12 @@
 
         // Update meal totals counter
         function updateMealTotals() {
-            const breakfastCount = document.querySelectorAll('input[value="breakfast"]:checked').length;
-            const lunchCount = document.querySelectorAll('input[value="lunch"]:checked').length;
-            const dinnerCount = document.querySelectorAll('input[value="dinner"]:checked').length;
-            const supperCount = document.querySelectorAll('input[value="supper"]:checked').length;
-            const snackCount = document.querySelectorAll('input[value="snack"]:checked').length;
+            // Only count checkboxes inside entry rows, not in the visitor modal
+            const breakfastCount = document.querySelectorAll('.entry-row input[value="breakfast"]:checked').length;
+            const lunchCount = document.querySelectorAll('.entry-row input[value="lunch"]:checked').length;
+            const dinnerCount = document.querySelectorAll('.entry-row input[value="dinner"]:checked').length;
+            const supperCount = document.querySelectorAll('.entry-row input[value="supper"]:checked').length;
+            const snackCount = document.querySelectorAll('.entry-row input[value="snack"]:checked').length;
             const total = breakfastCount + lunchCount + dinnerCount + supperCount + snackCount;
 
             document.getElementById('totalBreakfast').textContent = breakfastCount;
@@ -754,11 +755,11 @@
                 const url = selectedOption.dataset.url;
                 const filename = selectedOption.text;
                 document.getElementById('proof-status').innerHTML = `
-                                                                                                                                        <span style="color: var(--success);">
-                                                                                                                                            <i class="bi bi-check-circle"></i> Selected: ${filename}
-                                                                                                                                            | <a href="${url}" target="_blank" style="color: var(--primary);">View</a>
-                                                                                                                                        </span>
-                                                                                                                                    `;
+                                                                                                                                                <span style="color: var(--success);">
+                                                                                                                                                    <i class="bi bi-check-circle"></i> Selected: ${filename}
+                                                                                                                                                    | <a href="${url}" target="_blank" style="color: var(--primary);">View</a>
+                                                                                                                                                </span>
+                                                                                                                                            `;
             } else {
                 hasProofSelected = false;
                 document.getElementById('proof-status').innerHTML = '';
@@ -774,10 +775,10 @@
                 if (select) select.value = '';
 
                 document.getElementById('proof-status').innerHTML = `
-                                                                                                                                        <span style="color: var(--success);">
-                                                                                                                                            <i class="bi bi-check-circle"></i> Uploaded: ${file.name}
-                                                                                                                                        </span>
-                                                                                                                                    `;
+                                                                                                                                                <span style="color: var(--success);">
+                                                                                                                                                    <i class="bi bi-check-circle"></i> Uploaded: ${file.name}
+                                                                                                                                                </span>
+                                                                                                                                            `;
             } else {
                 hasProofSelected = false;
                 document.getElementById('proof-status').innerHTML = '';
@@ -807,1095 +808,1095 @@
         }
 
         // Handle visitor dinner checkbox change
-            function handleVisitorDinnerChange() {
-                const dinnerCheckbox = document.getElementById('visitorDinner');
-                const snackCheckbox = document.getElementById('visitorSnack');
+        function handleVisitorDinnerChange() {
+            const dinnerCheckbox = document.getElementById('visitorDinner');
+            const snackCheckbox = document.getElementById('visitorSnack');
 
-                if (dinnerCheckbox.checked) {
-                    snackCheckbox.checked = true;
-                    snackCheckbox.disabled = true;
-                } else {
-                    snackCheckbox.disabled = false;
-                }
+            if (dinnerCheckbox.checked) {
+                snackCheckbox.checked = true;
+                snackCheckbox.disabled = true;
+            } else {
+                snackCheckbox.disabled = false;
+            }
+        }
+
+        function updateVisitorPreview() {
+            const count = parseInt(document.getElementById('visitorCount').value) || 1;
+            const institution = document.getElementById('visitorInstitution').value || 'Institution';
+
+            let preview = [];
+            for (let i = 1; i <= Math.min(count, 5); i++) {
+                preview.push(`Visitor ${institution} ${String(i).padStart(2, '0')}`);
+            }
+            if (count > 5) {
+                preview.push('...');
+                preview.push(`Visitor ${institution} ${String(count).padStart(2, '0')}`);
             }
 
-            function updateVisitorPreview() {
-                const count = parseInt(document.getElementById('visitorCount').value) || 1;
-                const institution = document.getElementById('visitorInstitution').value || 'Institution';
+            document.getElementById('visitorPreview').textContent = preview.join(', ');
+            document.getElementById('visitorAddCount').textContent = count;
+        }
 
-                let preview = [];
-                for (let i = 1; i <= Math.min(count, 5); i++) {
-                    preview.push(`Visitor ${institution} ${i}`);
-                }
-                if (count > 5) {
-                    preview.push('...');
-                    preview.push(`Visitor ${institution} ${count}`);
-                }
+        function addVisitors(event) {
+            event.preventDefault();
 
-                document.getElementById('visitorPreview').textContent = preview.join(', ');
-                document.getElementById('visitorAddCount').textContent = count;
+            const count = parseInt(document.getElementById('visitorCount').value) || 1;
+            const institution = document.getElementById('visitorInstitution').value.trim();
+
+            if (!institution) {
+                alert('Please enter an institution/group name');
+                return;
             }
 
-            function addVisitors(event) {
-                event.preventDefault();
+            // Get selected meals
+            const meals = [];
+            if (document.getElementById('visitorBreakfast').checked) meals.push('breakfast');
+            if (document.getElementById('visitorLunch').checked) meals.push('lunch');
+            if (document.getElementById('visitorDinner').checked) meals.push('dinner');
+            if (document.getElementById('visitorSupper').checked) meals.push('supper');
+            if (document.getElementById('visitorSnack').checked) meals.push('snack');
 
-                const count = parseInt(document.getElementById('visitorCount').value) || 1;
-                const institution = document.getElementById('visitorInstitution').value.trim();
-
-                if (!institution) {
-                    alert('Please enter an institution/group name');
-                    return;
-                }
-
-                // Get selected meals
-                const meals = [];
-                if (document.getElementById('visitorBreakfast').checked) meals.push('breakfast');
-                if (document.getElementById('visitorLunch').checked) meals.push('lunch');
-                if (document.getElementById('visitorDinner').checked) meals.push('dinner');
-                if (document.getElementById('visitorSupper').checked) meals.push('supper');
-                if (document.getElementById('visitorSnack').checked) meals.push('snack');
-
-                if (meals.length === 0) {
-                    alert('Please select at least one meal');
-                    return;
-                }
-
-                // Check if total entries would exceed limit
-                const currentEntries = document.querySelectorAll('.entry-row').length;
-                if (currentEntries + count > 200) {
-                    alert(`Maximum 200 entries allowed. You can add ${200 - currentEntries} more.`);
-                    return;
-                }
-
-                // Add visitor entries
-                for (let i = 1; i <= count; i++) {
-                    const visitorName = `Visitor ${institution} ${i}`;
-                    addVisitorEntry(visitorName, meals);
-                }
-
-                closeVisitorModal();
-                updateMealTotals();
+            if (meals.length === 0) {
+                alert('Please select at least one meal');
+                return;
             }
 
-            function addVisitorEntry(visitorName, meals) {
-                entryCount++;
-                const container = document.getElementById('entries-container');
-
-                // Remove "no entries" message if present
-                const noEntriesEl = container.querySelector('.no-entries');
-                if (noEntriesEl) noEntriesEl.remove();
-
-                const breakfastChecked = meals.includes('breakfast') ? 'checked' : '';
-                const lunchChecked = meals.includes('lunch') ? 'checked' : '';
-                const dinnerChecked = meals.includes('dinner') ? 'checked' : '';
-                const supperChecked = meals.includes('supper') ? 'checked' : '';
-
-                const snackChecked = meals.includes('dinner') || meals.includes('snack') ? 'checked' : '';
-                const snackDisabled = meals.includes('dinner') ? 'disabled' : '';
-
-                const entryHtml = `
-                                                                                    <div class="entry-row has-meals" id="entry-${entryCount}">
-                                                                                        <div class="entry-number">${entryCount}</div>
-                                                                                        <div class="entry-content">
-                                                                                            <div class="employee-select">
-                                                                                                <input type="hidden" name="entries[${entryCount}][visitor_name]" value="${visitorName}">
-                                                                                                <div class="selected-employee" style="display: flex; margin-top: 0;">
-                                                                                                    <span><strong>👤 ${visitorName}</strong> <span style="color: var(--text-muted);">(Visitor)</span></span>
-                                                                                                    <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="removeEntry(${entryCount})">
-                                                                                                        <i class="bi bi-x"></i>
-                                                                                                    </button>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div class="meal-checkboxes">
-                                                                                                <label class="meal-checkbox">
-                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast" ${breakfastChecked} onchange="updateRowHighlight(${entryCount})">
-                                                                                                    <span>🌅 B'fast</span>
-                                                                                                </label>
-                                                                                                <label class="meal-checkbox">
-                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch" ${lunchChecked} onchange="updateRowHighlight(${entryCount})">
-                                                                                                    <span>☀️ Lunch</span>
-                                                                                                </label>
-                                                                                                <label class="meal-checkbox">
-                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner" ${dinnerChecked} onchange="handleDinnerChange(${entryCount}); updateRowHighlight(${entryCount})">
-                                                                                                    <span>🌙 Dinner</span>
-                                                                                                </label>
-                                                                                                <label class="meal-checkbox">
-                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper" ${supperChecked} onchange="updateRowHighlight(${entryCount})">
-                                                                                                    <span>🌃 Supper</span>
-                                                                                                </label>
-                                                                                                <label class="meal-checkbox">
-                                                                                                    <input type="checkbox" name="entries[${entryCount}][meals][]" value="snack" ${snackChecked} ${snackDisabled} onchange="updateRowHighlight(${entryCount})" id="snack-${entryCount}">
-                                                                                                    <span>🍪 Snack</span>
-                                                                                                </label>
-                                                                                            </div>
-                                                                                        </div>        </div>
-                                                                                                <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
-                                                                                                    <i class="bi bi-trash"></i>
-                                                                                                </button>
-                                                                                            </div>
-                                                                                        `;
-                container.insertAdjacentHTML('beforeend', entryHtml);
+            // Check if total entries would exceed limit
+            const currentEntries = document.querySelectorAll('.entry-row').length;
+            if (currentEntries + count > 200) {
+                alert(`Maximum 200 entries allowed. You can add ${200 - currentEntries} more.`);
+                return;
             }
 
-            function addEntry() {
-                if (entryCount >= 200) {
-                    alert('Maximum 200 entries allowed');
-                    return;
-                }
+            // Add visitor entries
+            for (let i = 1; i <= count; i++) {
+                const visitorName = `Visitor ${institution} ${String(i).padStart(2, '0')}`;
+                addVisitorEntry(visitorName, meals);
+            }
 
-                entryCount++;
-                const container = document.getElementById('entries-container');
-                const entryHtml = `
-                                                                                                                                                                                                                                                                        <div class="entry-row" id="entry-${entryCount}">
-                                                                                                                                                                                                                                                                            <div class="entry-number">${entryCount}</div>
-                                                                                                                                                                                                                                                                            <div class="entry-content">
-                                                                                                                                                                                                                                                                                <div class="employee-select">
-                                                                                                                                                                                                                                                                                    <div class="employee-search-container">
-                                                                                                                                                                                                                                                                                        <input type="text" class="form-control employee-search" 
-                                                                                                                                                                                                                                                                                            placeholder="Search employee..." 
-                                                                                                                                                                                                                                                                                            onkeyup="searchEmployee(this, ${entryCount})"
-                                                                                                                                                                                                                                                                                            onfocus="showSuggestions(${entryCount})"
-                                                                                                                                                                                                                                                                                            data-entry="${entryCount}">
-                                                                                                                                                                                                                                                                                        <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
-                                                                                                                                                                                                                                                                                        <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
+            closeVisitorModal();
+            updateMealTotals();
+        }
+
+        function addVisitorEntry(visitorName, meals) {
+            entryCount++;
+            const container = document.getElementById('entries-container');
+
+            // Remove "no entries" message if present
+            const noEntriesEl = container.querySelector('.no-entries');
+            if (noEntriesEl) noEntriesEl.remove();
+
+            const breakfastChecked = meals.includes('breakfast') ? 'checked' : '';
+            const lunchChecked = meals.includes('lunch') ? 'checked' : '';
+            const dinnerChecked = meals.includes('dinner') ? 'checked' : '';
+            const supperChecked = meals.includes('supper') ? 'checked' : '';
+
+            const snackChecked = meals.includes('dinner') || meals.includes('snack') ? 'checked' : '';
+            const snackDisabled = meals.includes('dinner') ? 'disabled' : '';
+
+            const entryHtml = `
+                                                                                            <div class="entry-row has-meals" id="entry-${entryCount}">
+                                                                                                <div class="entry-number">${entryCount}</div>
+                                                                                                <div class="entry-content">
+                                                                                                    <div class="employee-select">
+                                                                                                        <input type="hidden" name="entries[${entryCount}][visitor_name]" value="${visitorName}">
+                                                                                                        <div class="selected-employee" style="display: flex; margin-top: 0;">
+                                                                                                            <span><strong>👤 ${visitorName}</strong> <span style="color: var(--text-muted);">(Visitor)</span></span>
+                                                                                                            <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="removeEntry(${entryCount})">
+                                                                                                                <i class="bi bi-x"></i>
+                                                                                                            </button>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <div class="meal-checkboxes">
+                                                                                                        <label class="meal-checkbox">
+                                                                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast" ${breakfastChecked} onchange="updateRowHighlight(${entryCount})">
+                                                                                                            <span>🌅 B'fast</span>
+                                                                                                        </label>
+                                                                                                        <label class="meal-checkbox">
+                                                                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch" ${lunchChecked} onchange="updateRowHighlight(${entryCount})">
+                                                                                                            <span>☀️ Lunch</span>
+                                                                                                        </label>
+                                                                                                        <label class="meal-checkbox">
+                                                                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner" ${dinnerChecked} onchange="handleDinnerChange(${entryCount}); updateRowHighlight(${entryCount})">
+                                                                                                            <span>🌙 Dinner</span>
+                                                                                                        </label>
+                                                                                                        <label class="meal-checkbox">
+                                                                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper" ${supperChecked} onchange="updateRowHighlight(${entryCount})">
+                                                                                                            <span>🌃 Supper</span>
+                                                                                                        </label>
+                                                                                                        <label class="meal-checkbox">
+                                                                                                            <input type="checkbox" name="entries[${entryCount}][meals][]" value="snack" ${snackChecked} ${snackDisabled} onchange="updateRowHighlight(${entryCount})" id="snack-${entryCount}">
+                                                                                                            <span>🍪 Snack</span>
+                                                                                                        </label>
+                                                                                                    </div>
+                                                                                                </div>        </div>
+                                                                                                        <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
+                                                                                                            <i class="bi bi-trash"></i>
+                                                                                                        </button>
+                                                                                                    </div>
+                                                                                                `;
+            container.insertAdjacentHTML('beforeend', entryHtml);
+        }
+
+        function addEntry() {
+            if (entryCount >= 200) {
+                alert('Maximum 200 entries allowed');
+                return;
+            }
+
+            entryCount++;
+            const container = document.getElementById('entries-container');
+            const entryHtml = `
+                                                                                                                                                                                                                                                                                <div class="entry-row" id="entry-${entryCount}">
+                                                                                                                                                                                                                                                                                    <div class="entry-number">${entryCount}</div>
+                                                                                                                                                                                                                                                                                    <div class="entry-content">
+                                                                                                                                                                                                                                                                                        <div class="employee-select">
+                                                                                                                                                                                                                                                                                            <div class="employee-search-container">
+                                                                                                                                                                                                                                                                                                <input type="text" class="form-control employee-search" 
+                                                                                                                                                                                                                                                                                                    placeholder="Search employee..." 
+                                                                                                                                                                                                                                                                                                    onkeyup="searchEmployee(this, ${entryCount})"
+                                                                                                                                                                                                                                                                                                    onfocus="showSuggestions(${entryCount})"
+                                                                                                                                                                                                                                                                                                    data-entry="${entryCount}">
+                                                                                                                                                                                                                                                                                                <input type="hidden" name="entries[${entryCount}][employee_id]" id="employee-id-${entryCount}">
+                                                                                                                                                                                                                                                                                                <div class="employee-suggestions" id="suggestions-${entryCount}"></div>
+                                                                                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                                                                            <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
+                                                                                                                                                                                                                                                                                                <span id="selected-name-${entryCount}"></span>
+                                                                                                                                                                                                                                                                                                <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
+                                                                                                                                                                                                                                                                                                    <i class="bi bi-x"></i>
+                                                                                                                                                                                                                                                                                                </button>
+                                                                                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                                                                        </div>
+                                                                                                                                                                                                                                                                                        <div class="meal-checkboxes">
+                                                                                                                                                                                                                                                                                            <label class="meal-checkbox">
+                                                                                                                                                                                                                                                                                                <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast" onchange="updateRowHighlight(${entryCount})">
+                                                                                                                                                                                                                                                                                                <span>🌅 B'fast</span>
+                                                                                                                                                                                                                                                                                            </label>
+                                                                                                                                                                                                                                                                                            <label class="meal-checkbox">
+                                                                                                                                                                                                                                                                                                <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch" onchange="updateRowHighlight(${entryCount})">
+                                                                                                                                                                                                                                                                                                <span>☀️ Lunch</span>
+                                                                                                                                                                                                                                                                                            </label>
+                                                                                                                                                                                                                                                                                            <label class="meal-checkbox">
+                                                                                                                                                                                                                                                                                                <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner" onchange="handleDinnerChange(${entryCount}); updateRowHighlight(${entryCount})">
+                                                                                                                                                                                                                                                                                                <span>🌙 Dinner</span>
+                                                                                                                                                                                                                                                                                            </label>
+                                                                                                                                                                                                                                                                                            <label class="meal-checkbox">
+                                                                                                                                                                                                                                                                                                <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper" onchange="updateRowHighlight(${entryCount})">
+                                                                                                                                                                                                                                                                                                <span>🌃 Supper</span>
+                                                                                                                                                                                                                                                                                            </label>
+                                                                                                                                                                                                                                                                                            <label class="meal-checkbox">
+                                                                                                                                                                                                                                                                                                <input type="checkbox" name="entries[${entryCount}][meals][]" value="snack" onchange="updateRowHighlight(${entryCount})" id="snack-${entryCount}">
+                                                                                                                                                                                                                                                                                                <span>🍪 Snack</span>
+                                                                                                                                                                                                                                                                                            </label>
+                                                                                                                                                                                                                                                                                        </div>
                                                                                                                                                                                                                                                                                     </div>
-                                                                                                                                                                                                                                                                                    <div class="selected-employee" id="selected-${entryCount}" style="display: none; margin-top: 0.5rem;">
-                                                                                                                                                                                                                                                                                        <span id="selected-name-${entryCount}"></span>
-                                                                                                                                                                                                                                                                                        <button type="button" class="btn-remove" style="width:24px;height:24px;" onclick="clearEmployee(${entryCount})">
-                                                                                                                                                                                                                                                                                            <i class="bi bi-x"></i>
-                                                                                                                                                                                                                                                                                        </button>
-                                                                                                                                                                                                                                                                                    </div>
-                                                                                                                                                                                                                                                                                </div>
-                                                                                                                                                                                                                                                                                <div class="meal-checkboxes">
-                                                                                                                                                                                                                                                                                    <label class="meal-checkbox">
-                                                                                                                                                                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="breakfast" onchange="updateRowHighlight(${entryCount})">
-                                                                                                                                                                                                                                                                                        <span>🌅 B'fast</span>
-                                                                                                                                                                                                                                                                                    </label>
-                                                                                                                                                                                                                                                                                    <label class="meal-checkbox">
-                                                                                                                                                                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="lunch" onchange="updateRowHighlight(${entryCount})">
-                                                                                                                                                                                                                                                                                        <span>☀️ Lunch</span>
-                                                                                                                                                                                                                                                                                    </label>
-                                                                                                                                                                                                                                                                                    <label class="meal-checkbox">
-                                                                                                                                                                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="dinner" onchange="handleDinnerChange(${entryCount}); updateRowHighlight(${entryCount})">
-                                                                                                                                                                                                                                                                                        <span>🌙 Dinner</span>
-                                                                                                                                                                                                                                                                                    </label>
-                                                                                                                                                                                                                                                                                    <label class="meal-checkbox">
-                                                                                                                                                                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="supper" onchange="updateRowHighlight(${entryCount})">
-                                                                                                                                                                                                                                                                                        <span>🌃 Supper</span>
-                                                                                                                                                                                                                                                                                    </label>
-                                                                                                                                                                                                                                                                                    <label class="meal-checkbox">
-                                                                                                                                                                                                                                                                                        <input type="checkbox" name="entries[${entryCount}][meals][]" value="snack" onchange="updateRowHighlight(${entryCount})" id="snack-${entryCount}">
-                                                                                                                                                                                                                                                                                        <span>🍪 Snack</span>
-                                                                                                                                                                                                                                                                                    </label>
-                                                                                                                                                                                                                                                                                </div>
-                                                                                                                                                                                                                                                                            </div>
-                                                                                                                                                                                                                                                                            <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
-                                                                                                                                                                                                                                                                                <i class="bi bi-trash"></i>
-                                                                                                                                                                                                                                                                            </button>
-                                                                                                                                                                                                                                                                        </div>
-                                                                                                                                                                                                                                                                    `;
-                container.insertAdjacentHTML('beforeend', entryHtml);
-                updateNoEntriesMessage();
-
-                // Scroll to the new entry and focus on search input
-                const newEntry = document.getElementById(`entry-${entryCount}`);
-                if (newEntry) {
-                    newEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    // Focus on the search input of the new entry
-                    setTimeout(() => {
-                        const searchInput = newEntry.querySelector('.employee-search');
-                        if (searchInput) searchInput.focus();
-                    }, 300);
-                }
-            }
-
-            function removeEntry(index) {
-                document.getElementById(`entry-${index}`).remove();
-                updateNoEntriesMessage();
-                renumberEntries();
-                updateMealTotals();
-            }
-
-            function renumberEntries() {
-                const entries = document.querySelectorAll('.entry-row');
-                entries.forEach((entry, idx) => {
-                    entry.querySelector('.entry-number').textContent = idx + 1;
-                });
-            }
-
-            function updateRowHighlight(entryIndex) {
-                const entryRow = document.getElementById(`entry-${entryIndex}`);
-                if (entryRow) {
-                    const checkedMeals = entryRow.querySelectorAll('input[type="checkbox"]:checked');
-                    if (checkedMeals.length > 0) {
-                        entryRow.classList.add('has-meals');
-                    } else {
-                        entryRow.classList.remove('has-meals');
-                    }
-                }
-                updateMealTotals();
-            }
-
-            function updateNoEntriesMessage() {
-                const container = document.getElementById('entries-container');
-                const entries = container.querySelectorAll('.entry-row');
-
-                let noEntriesEl = container.querySelector('.no-entries');
-
-                if (entries.length === 0) {
-                    if (!noEntriesEl) {
-                        container.innerHTML = `
-                                                                                                                                                                                                                                                                                <div class="no-entries">
-                                                                                                                                                                                                                                                                                    <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                                                                                                                                                                                                                                                                                    <p>No entries yet. Click "Add Entry" to start.</p>
+                                                                                                                                                                                                                                                                                    <button type="button" class="btn-remove" onclick="removeEntry(${entryCount})">
+                                                                                                                                                                                                                                                                                        <i class="bi bi-trash"></i>
+                                                                                                                                                                                                                                                                                    </button>
                                                                                                                                                                                                                                                                                 </div>
                                                                                                                                                                                                                                                                             `;
-                    }
-                } else {
-                    if (noEntriesEl) {
-                        noEntriesEl.remove();
-                    }
-                }
-            }
-
-            function searchEmployee(input, entryIndex) {
-                const query = input.value.toLowerCase();
-                const suggestionsEl = document.getElementById(`suggestions-${entryIndex}`);
-
-                if (query.length < 1) {
-                    suggestionsEl.style.display = 'none';
-                    return;
-                }
-
-                const filtered = employees.filter(emp =>
-                    emp.name.toLowerCase().includes(query) ||
-                    emp.employee_number.toLowerCase().includes(query) ||
-                    (emp.department && emp.department.toLowerCase().includes(query))
-                ).slice(0, 50);
-
-                let html = '';
-                if (filtered.length === 0) {
-                    html = '<div class="employee-suggestion" style="color: var(--text-muted);">No employees found</div>';
-                } else {
-                    html = filtered.map(emp => `
-                                                                                                                                                                                    <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
-                                                                                                                                                                                        <strong>${emp.employee_number}</strong> - ${emp.name}
-                                                                                                                                                                                        <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
-                                                                                                                                                                                    </div>
-                                                                                                                                                                                `).join('');
-                }
-
-                // Always show "Add New Employee" option
-                html += `
-                                                                                                                                                                                <div class="employee-suggestion" onclick="openQuickAddEmployee(${entryIndex})" style="background: rgba(255,69,0,0.1); border-top: 1px solid var(--primary);">
-                                                                                                                                                                                    <i class="bi bi-plus-circle" style="color: var(--primary);"></i>
-                                                                                                                                                                                    <strong style="color: var(--primary);"> + Add New Employee</strong>
-                                                                                                                                                                                </div>
-                                                                                                                                                                            `;
-
-                suggestionsEl.innerHTML = html;
-                suggestionsEl.style.display = 'block';
-            }
-
-            function showSuggestions(entryIndex) {
-                // Show suggestions when focused
-                const input = document.querySelector(`[data-entry="${entryIndex}"]`);
-                if (input.value.length >= 1) {
-                    searchEmployee(input, entryIndex);
-                }
-            }
-
-            function selectEmployee(entryIndex, id, number, name, department, employeeStatus) {
-                document.getElementById(`employee-id-${entryIndex}`).value = id;
-                document.getElementById(`selected-name-${entryIndex}`).innerHTML =
-                    `${number} - <strong>${name}</strong>` + (department ? ` <span style="color: var(--text-muted);">(${department} • ${employeeStatus || ''})</span>` : '');
-                document.getElementById(`selected-${entryIndex}`).style.display = 'flex';
-                document.getElementById(`suggestions-${entryIndex}`).style.display = 'none';
-
-                // Hide search input
-                const searchInput = document.querySelector(`[data-entry="${entryIndex}"]`);
-                searchInput.style.display = 'none';
-            }
-
-            function clearEmployee(entryIndex) {
-                document.getElementById(`employee-id-${entryIndex}`).value = '';
-                document.getElementById(`selected-${entryIndex}`).style.display = 'none';
-
-                const searchInput = document.querySelector(`[data-entry="${entryIndex}"]`);
-                searchInput.style.display = 'block';
-                searchInput.value = '';
-                searchInput.focus();
-            }
-
-
-            function submitAll() {
-                // Basic validation
-                const date = document.getElementById('date').value;
-                const recordedBy = document.getElementById('recorded_by').value.trim();
-
-                if (!date) {
-                    alert('Please select a Date');
-                    return;
-                }
-
-                if (!recordedBy) {
-                    alert('Please enter Recorded By');
-                    return;
-                }
-
-                if (entryCount === 0) {
-                    alert('Please add at least one entry');
-                    return;
-                }
-
-                // Check if absence proof is selected or uploaded (REQUIRED)
-                const uploadedFile = document.getElementById('absence_proof').files[0];
-                const selectedExisting = document.getElementById('existing_proof') ? document.getElementById('existing_proof').value : '';
-
-                if (!uploadedFile && !selectedExisting) {
-                    alert('Absence Proof is required! Please upload a file or select an existing one.');
-                    return;
-                }
-
-                // Check if any entries are empty (no employee selected)
-                let hasEmptyEntries = false;
-                for (let i = 1; i <= entryCount; i++) {
-                    const employeeIdInput = document.getElementById(`employee-id-${i}`);
-                    if (employeeIdInput && !employeeIdInput.value) {
-                        hasEmptyEntries = true;
-                        break;
-                    }
-                }
-
-                if (hasEmptyEntries) {
-                    alert('Some entries have no employee selected. Please select employees or remove empty entries.');
-                    return;
-                }
-
-                if (confirm(`Ready to submit ${entryCount} attendance entries?`)) {
-                    // Show loading state
-                    const submitBtn = document.querySelector('.btn-success');
-                    const originalText = submitBtn.innerHTML;
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
-
-                    document.getElementById('bulk-form').submit();
-                }
-            }
-
-            function clearAll() {
-                if (confirm('Clear all entries?')) {
-                    document.getElementById('entries-container').innerHTML = '';
-                    entryCount = 0;
-                    updateNoEntriesMessage();
-                }
-            }
-
-            // Hide suggestions when clicking outside
-            document.addEventListener('click', function (e) {
-                if (!e.target.classList.contains('employee-search') && !e.target.closest('.employee-suggestions')) {
-                    document.querySelectorAll('.employee-suggestions').forEach(el => {
-                        el.style.display = 'none';
-                    });
-                }
-            });
-
-            // Initialize with empty message
+            container.insertAdjacentHTML('beforeend', entryHtml);
             updateNoEntriesMessage();
 
-            // Form validation
-            document.getElementById('bulk-form').addEventListener('submit', function (e) {
-                const entries = document.querySelectorAll('.entry-row');
-                let valid = true;
-                let errorMsg = '';
-
-                if (entries.length === 0) {
-                    e.preventDefault();
-                    alert('Please add at least one entry');
-                    return;
-                }
-
-                // Count entries with meals selected (entries without meals will be skipped by backend)
-                let entriesWithMeals = 0;
-                entries.forEach((entry, idx) => {
-                    const employeeId = entry.querySelector('input[type="hidden"]').value;
-                    const meals = entry.querySelectorAll('input[type="checkbox"]:checked');
-
-                    if (!employeeId) {
-                        valid = false;
-                        errorMsg = `Entry ${idx + 1}: Please select an employee`;
-                    } else if (meals.length > 0) {
-                        entriesWithMeals++;
-                    }
-                    // Entries with no meals are allowed - they will simply be skipped
-                });
-
-                if (!valid) {
-                    e.preventDefault();
-                    alert(errorMsg);
-                } else if (entriesWithMeals === 0) {
-                    e.preventDefault();
-                    alert('Please select at least one meal for at least one entry');
-                }
-            });
-
-            // File preview function
-            function previewFile() {
-                const fileInput = document.getElementById('absence_proof');
-                const preview = document.getElementById('file-preview');
-                const fileName = document.getElementById('file-name');
-
-                if (fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    fileName.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
-                    preview.style.display = 'block';
-                } else {
-                    preview.style.display = 'none';
-                }
-            }
-
-            // Reorder groups based on selected location - matching groups go to top
-            function reorderGroups() {
-                const locationSelect = document.getElementById('location');
-                const groupSelector = document.getElementById('groupSelector');
-
-                if (!groupSelector || !locationSelect) return;
-
-                const selectedLocation = locationSelect.value.toLowerCase();
-                const options = Array.from(groupSelector.options);
-
-                // Separate into matching and non-matching groups
-                const defaultOption = options.find(opt => opt.value === '');
-                const matchingGroups = options.filter(opt => opt.value !== '' && opt.text.toLowerCase().includes(selectedLocation));
-                const otherGroups = options.filter(opt => opt.value !== '' && !opt.text.toLowerCase().includes(selectedLocation));
-
-                // Clear and re-add in new order
-                groupSelector.innerHTML = '';
-                if (defaultOption) groupSelector.appendChild(defaultOption);
-                matchingGroups.forEach(opt => groupSelector.appendChild(opt));
-                otherGroups.forEach(opt => groupSelector.appendChild(opt));
-            }
-
-            // Run on page load
-            document.addEventListener('DOMContentLoaded', function () {
-                reorderGroups();
-            });
-
-            // Load Group function
-            function loadGroup() {
-                const selector = document.getElementById('groupSelector');
-                const selectedOption = selector.options[selector.selectedIndex];
-
-                if (!selectedOption.value) {
-                    alert('Please select a group');
-                    return;
-                }
-
-                const groupEmployees = JSON.parse(selectedOption.getAttribute('data-employees'));
-
-                if (groupEmployees.length === 0) {
-                    alert('This group has no employees');
-                    return;
-                }
-
-                if (groupEmployees.length > 200) {
-                    alert('This group has too many employees (max 200)');
-                    return;
-                }
-
-                // Clear existing entries
-                if (entryCount > 0) {
-                    if (!confirm(`This will clear ${entryCount} existing entries. Continue?`)) {
-                        return;
-                    }
-                    clearAll();
-                }
-
-                // Add entry for each employee with B, L, D auto-checked
-                groupEmployees.forEach((employee) => {
-                    addEntry();
-
-                    // Get the current entry number
-                    const currentEntry = entryCount;
-
-                    // Wait a tiny bit for DOM to update, then select employee
-                    setTimeout(() => {
-                        // Set the hidden employee ID input
-                        const employeeIdInput = document.getElementById(`employee-id-${currentEntry}`);
-                        if (employeeIdInput) {
-                            employeeIdInput.value = employee.id;
-                        }
-
-                        // Hide search box and show selected employee
-                        const entryRow = document.getElementById(`entry-${currentEntry}`);
-                        if (entryRow) {
-                            const searchInput = entryRow.querySelector('.employee-search');
-                            const selectedDiv = document.getElementById(`selected-${currentEntry}`);
-                            const selectedNameSpan = document.getElementById(`selected-name-${currentEntry}`);
-
-                            if (searchInput && selectedDiv && selectedNameSpan) {
-                                searchInput.style.display = 'none';
-                                selectedDiv.style.display = 'flex';
-                                selectedNameSpan.innerHTML = `${employee.employee_number} - <strong>${employee.name}</strong> <span style="color: var(--text-muted);">(${employee.department || 'N/A'} • ${employee.employee_status || 'N/A'})</span>`;
-                            }
-
-                            // Do not auto-check any meals - leave them empty for user to select
-                        }
-                    }, 10);
-                });
-
+            // Scroll to the new entry and focus on search input
+            const newEntry = document.getElementById(`entry-${entryCount}`);
+            if (newEntry) {
+                newEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Focus on the search input of the new entry
                 setTimeout(() => {
-                    alert(`Loaded ${groupEmployees.length} employees from group "${selectedOption.text}"`);
-                    selector.value = ''; // Reset selector
-                }, 100);
+                    const searchInput = newEntry.querySelector('.employee-search');
+                    if (searchInput) searchInput.focus();
+                }, 300);
+            }
+        }
+
+        function removeEntry(index) {
+            document.getElementById(`entry-${index}`).remove();
+            updateNoEntriesMessage();
+            renumberEntries();
+            updateMealTotals();
+        }
+
+        function renumberEntries() {
+            const entries = document.querySelectorAll('.entry-row');
+            entries.forEach((entry, idx) => {
+                entry.querySelector('.entry-number').textContent = idx + 1;
+            });
+        }
+
+        function updateRowHighlight(entryIndex) {
+            const entryRow = document.getElementById(`entry-${entryIndex}`);
+            if (entryRow) {
+                const checkedMeals = entryRow.querySelectorAll('input[type="checkbox"]:checked');
+                if (checkedMeals.length > 0) {
+                    entryRow.classList.add('has-meals');
+                } else {
+                    entryRow.classList.remove('has-meals');
+                }
+            }
+            updateMealTotals();
+        }
+
+        function updateNoEntriesMessage() {
+            const container = document.getElementById('entries-container');
+            const entries = container.querySelectorAll('.entry-row');
+
+            let noEntriesEl = container.querySelector('.no-entries');
+
+            if (entries.length === 0) {
+                if (!noEntriesEl) {
+                    container.innerHTML = `
+                                                                                                                                                                                                                                                                                        <div class="no-entries">
+                                                                                                                                                                                                                                                                                            <i class="bi bi-inbox" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                                                                                                                                                                                                                                                                            <p>No entries yet. Click "Add Entry" to start.</p>
+                                                                                                                                                                                                                                                                                        </div>
+                                                                                                                                                                                                                                                                                    `;
+                }
+            } else {
+                if (noEntriesEl) {
+                    noEntriesEl.remove();
+                }
+            }
+        }
+
+        function searchEmployee(input, entryIndex) {
+            const query = input.value.toLowerCase();
+            const suggestionsEl = document.getElementById(`suggestions-${entryIndex}`);
+
+            if (query.length < 1) {
+                suggestionsEl.style.display = 'none';
+                return;
             }
 
-            // Groups Modal Functions
-            let currentEditingGroupId = null;
-            let allGroups = [];
+            const filtered = employees.filter(emp =>
+                emp.name.toLowerCase().includes(query) ||
+                emp.employee_number.toLowerCase().includes(query) ||
+                (emp.department && emp.department.toLowerCase().includes(query))
+            ).slice(0, 50);
 
-            async function openGroupsModal() {
-                document.getElementById('groupsModal').style.display = 'flex';
-                await loadGroups();
+            let html = '';
+            if (filtered.length === 0) {
+                html = '<div class="employee-suggestion" style="color: var(--text-muted);">No employees found</div>';
+            } else {
+                html = filtered.map(emp => `
+                                                                                                                                                                                            <div class="employee-suggestion" onclick="selectEmployee(${entryIndex}, ${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${(emp.department || '').replace(/'/g, "\\'")}', '${(emp.employee_status || '').replace(/'/g, "\\'")}')">
+                                                                                                                                                                                                <strong>${emp.employee_number}</strong> - ${emp.name}
+                                                                                                                                                                                                <span style="color: var(--text-muted);"> (${emp.department || ''} • ${emp.employee_status || ''})</span>
+                                                                                                                                                                                            </div>
+                                                                                                                                                                                        `).join('');
             }
 
-            function closeGroupsModal() {
-                document.getElementById('groupsModal').style.display = 'none';
-                cancelGroupEdit();
+            // Always show "Add New Employee" option
+            html += `
+                                                                                                                                                                                        <div class="employee-suggestion" onclick="openQuickAddEmployee(${entryIndex})" style="background: rgba(255,69,0,0.1); border-top: 1px solid var(--primary);">
+                                                                                                                                                                                            <i class="bi bi-plus-circle" style="color: var(--primary);"></i>
+                                                                                                                                                                                            <strong style="color: var(--primary);"> + Add New Employee</strong>
+                                                                                                                                                                                        </div>
+                                                                                                                                                                                    `;
+
+            suggestionsEl.innerHTML = html;
+            suggestionsEl.style.display = 'block';
+        }
+
+        function showSuggestions(entryIndex) {
+            // Show suggestions when focused
+            const input = document.querySelector(`[data-entry="${entryIndex}"]`);
+            if (input.value.length >= 1) {
+                searchEmployee(input, entryIndex);
+            }
+        }
+
+        function selectEmployee(entryIndex, id, number, name, department, employeeStatus) {
+            document.getElementById(`employee-id-${entryIndex}`).value = id;
+            document.getElementById(`selected-name-${entryIndex}`).innerHTML =
+                `${number} - <strong>${name}</strong>` + (department ? ` <span style="color: var(--text-muted);">(${department} • ${employeeStatus || ''})</span>` : '');
+            document.getElementById(`selected-${entryIndex}`).style.display = 'flex';
+            document.getElementById(`suggestions-${entryIndex}`).style.display = 'none';
+
+            // Hide search input
+            const searchInput = document.querySelector(`[data-entry="${entryIndex}"]`);
+            searchInput.style.display = 'none';
+        }
+
+        function clearEmployee(entryIndex) {
+            document.getElementById(`employee-id-${entryIndex}`).value = '';
+            document.getElementById(`selected-${entryIndex}`).style.display = 'none';
+
+            const searchInput = document.querySelector(`[data-entry="${entryIndex}"]`);
+            searchInput.style.display = 'block';
+            searchInput.value = '';
+            searchInput.focus();
+        }
+
+
+        function submitAll() {
+            // Basic validation
+            const date = document.getElementById('date').value;
+            const recordedBy = document.getElementById('recorded_by').value.trim();
+
+            if (!date) {
+                alert('Please select a Date');
+                return;
             }
 
-            async function loadGroups() {
-                try {
-                    const response = await fetch('{{ route("groups.index") }}');
-                    allGroups = await response.json();
-                    renderGroupsList();
-                } catch (error) {
-                    console.error('Error loading groups:', error);
-                    alert('Failed to load groups');
+            if (!recordedBy) {
+                alert('Please enter Recorded By');
+                return;
+            }
+
+            if (entryCount === 0) {
+                alert('Please add at least one entry');
+                return;
+            }
+
+            // Check if absence proof is selected or uploaded (REQUIRED)
+            const uploadedFile = document.getElementById('absence_proof').files[0];
+            const selectedExisting = document.getElementById('existing_proof') ? document.getElementById('existing_proof').value : '';
+
+            if (!uploadedFile && !selectedExisting) {
+                alert('Absence Proof is required! Please upload a file or select an existing one.');
+                return;
+            }
+
+            // Check if any entries are empty (no employee selected)
+            let hasEmptyEntries = false;
+            for (let i = 1; i <= entryCount; i++) {
+                const employeeIdInput = document.getElementById(`employee-id-${i}`);
+                if (employeeIdInput && !employeeIdInput.value) {
+                    hasEmptyEntries = true;
+                    break;
                 }
             }
 
-            function renderGroupsList() {
-                const groupsList = document.getElementById('groupsList');
-                if (allGroups.length === 0) {
-                    groupsList.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">No groups created yet</p>';
-                    return;
-                }
-
-                groupsList.innerHTML = allGroups.map(group => `
-                                                                                                                                                                                                                        <div style="padding: 1rem; border: 1px solid var(--card-border); border-radius: 8px; margin-bottom: 0.75rem; background: rgba(255,255,255,0.02);">
-                                                                                                                                                                                                                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                                                                                                                                                                                                <div>
-                                                                                                                                                                                                                                    <strong style="color: var(--primary);">${group.name}</strong>
-                                                                                                                                                                                                                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
-                                                                                                                                                                                                                                        ${group.employees.length} employees
-                                                                                                                                                                                                                                    </p>
-                                                                                                                                                                                                                                </div>
-                                                                                                                                                                                                                                <div style="display: flex; gap: 0.5rem;">
-                                                                                                                                                                                                                                    <button class="btn btn-secondary btn-sm" onclick="editGroup(${group.id})">
-                                                                                                                                                                                                                                        <i class="bi bi-pencil"></i> Edit
-                                                                                                                                                                                                                                    </button>
-                                                                                                                                                                                                                                    <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id}, '${group.name}')">
-                                                                                                                                                                                                                                        <i class="bi bi-trash"></i> Delete
-                                                                                                                                                                                                                                    </button>
-                                                                                                                                                                                                                                </div>
-                                                                                                                                                                                                                            </div>
-                                                                                                                                                                                                                        </div>
-                                                                                                                                                                                                                    `).join('');
+            if (hasEmptyEntries) {
+                alert('Some entries have no employee selected. Please select employees or remove empty entries.');
+                return;
             }
 
-            async function saveGroup() {
-                const groupName = document.getElementById('groupName').value.trim();
-                const selectedEmployees = Array.from(document.querySelectorAll('.employee-checkbox:checked')).map(cb => cb.value);
+            if (confirm(`Ready to submit ${entryCount} attendance entries?`)) {
+                // Show loading state
+                const submitBtn = document.querySelector('.btn-success');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
 
-                if (!groupName) {
-                    alert('Please enter a group name');
-                    return;
-                }
-
-                if (selectedEmployees.length === 0) {
-                    alert('Please select at least one employee');
-                    return;
-                }
-
-                try {
-                    const url = currentEditingGroupId
-                        ? `{{ url('/groups') }}/${currentEditingGroupId}`
-                        : '{{ route("groups.store") }}';
-
-                    const method = currentEditingGroupId ? 'PUT' : 'POST';
-
-                    const response = await fetch(url, {
-                        method: method,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            name: groupName,
-                            employee_ids: selectedEmployees
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        alert(data.message);
-                        cancelGroupEdit();
-                        await loadGroups();
-                        // Refresh group selector dropdown
-                        location.reload();
-                    } else {
-                        alert('Error: ' + (data.message || 'Failed to save group'));
-                    }
-                } catch (error) {
-                    console.error('Error saving group:', error);
-                    alert('Failed to save group');
-                }
+                document.getElementById('bulk-form').submit();
             }
+        }
 
-            function editGroup(groupId) {
-                currentEditingGroupId = groupId;
-                const group = allGroups.find(g => g.id === groupId);
-
-                if (!group) return;
-
-                document.getElementById('groupName').value = group.name;
-                document.getElementById('saveButtonText').textContent = 'Update Group';
-                document.getElementById('cancelButton').style.display = 'inline-block';
-
-                // Check employees in this group
-                document.querySelectorAll('.employee-checkbox').forEach(cb => {
-                    cb.checked = group.employees.some(emp => emp.id == cb.value);
-                });
-
-                // Scroll to top of modal
-                document.querySelector('.modal-content').scrollTop = 0;
+        function clearAll() {
+            if (confirm('Clear all entries?')) {
+                document.getElementById('entries-container').innerHTML = '';
+                entryCount = 0;
+                updateNoEntriesMessage();
             }
+        }
 
-            async function deleteGroup(groupId, groupName) {
-                if (!confirm(`Are you sure you want to delete group "${groupName}"?`)) return;
-
-                try {
-                    const response = await fetch(`{{ url('/groups') }}/${groupId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json'
-                        }
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        alert(data.message);
-                        await loadGroups();
-                        // Refresh group selector dropdown
-                        location.reload();
-                    } else {
-                        alert('Error: ' + (data.message || 'Failed to delete group'));
-                    }
-                } catch (error) {
-                    console.error('Error deleting group:', error);
-                    alert('Failed to delete group');
-                }
-            }
-
-            function cancelGroupEdit() {
-                currentEditingGroupId = null;
-                document.getElementById('groupName').value = '';
-                document.getElementById('saveButtonText').textContent = 'Create Group';
-                document.getElementById('cancelButton').style.display = 'none';
-                deselectAllEmployees();
-                updateSelectedCount();
-            }
-
-            function selectAllEmployees() {
-                document.querySelectorAll('.employee-checkbox-label').forEach(label => {
-                    if (label.style.display !== 'none') {
-                        label.querySelector('.employee-checkbox').checked = true;
-                    }
-                });
-                updateSelectedCount();
-            }
-
-            function deselectAllEmployees() {
-                document.querySelectorAll('.employee-checkbox').forEach(cb => cb.checked = false);
-                updateSelectedCount();
-            }
-
-            function updateSelectedCount() {
-                const count = document.querySelectorAll('.employee-checkbox:checked').length;
-                document.getElementById('selectedCount').textContent = count + ' selected';
-            }
-
-            function filterEmployees() {
-                const searchTerm = document.getElementById('searchEmployeeInput').value.toLowerCase();
-                document.querySelectorAll('.employee-checkbox-label').forEach(label => {
-                    const name = label.getAttribute('data-name') || '';
-                    const number = label.getAttribute('data-number') || '';
-                    if (name.includes(searchTerm) || number.includes(searchTerm)) {
-                        label.style.display = 'block';
-                    } else {
-                        label.style.display = 'none';
-                    }
-                });
-            }
-
-            function filterGroups() {
-                const searchTerm = document.getElementById('searchGroupInput').value.toLowerCase();
-                document.querySelectorAll('#groupsList > div').forEach(groupItem => {
-                    const groupName = groupItem.textContent.toLowerCase();
-                    if (groupName.includes(searchTerm)) {
-                        groupItem.style.display = 'block';
-                    } else {
-                        groupItem.style.display = 'none';
-                    }
-                });
-            }
-
-            // New functions for redesigned modal
-            let selectedMembers = [];  // Array of {id, number, name, dept, order}
-
-            function addEmployeeToSelected(employeeId) {
-                // Check if already added
-                if (selectedMembers.find(m => m.id === employeeId)) {
-                    return;
-                }
-
-                // Get employee data from available list
-                const employeeItem = document.querySelector(`.available-employee-item[data-id="${employeeId}"]`);
-                if (!employeeItem) return;
-
-                const employee = {
-                    id: employeeId,
-                    number: employeeItem.dataset.employeeNumber,
-                    name: employeeItem.dataset.employeeName,
-                    dept: employeeItem.dataset.employeeDept,
-                    order: selectedMembers.length
-                };
-
-                selectedMembers.push(employee);
-                renderSelectedMembers();
-
-                // Hide from available list
-                employeeItem.style.display = 'none';
-            }
-
-            function removeEmployeeFromSelected(employeeId) {
-                selectedMembers = selectedMembers.filter(m => m.id !== employeeId);
-
-                // Reorder remaining members
-                selectedMembers.forEach((m, index) => {
-                    m.order = index;
-                });
-
-                renderSelectedMembers();
-
-                // Show in available list
-                const employeeItem = document.querySelector(`.available-employee-item[data-id="${employeeId}"]`);
-                if (employeeItem) {
-                    employeeItem.style.display = 'flex';
-                }
-
-                // Re-apply search filter
-                filterAvailableEmployees();
-            }
-
-            function renderSelectedMembers() {
-                const container = document.getElementById('selectedMembersList');
-                const emptyMessage = document.getElementById('emptySelectedMessage');
-                const countSpan = document.getElementById('selectedMembersCount');
-
-                countSpan.textContent = selectedMembers.length;
-
-                if (selectedMembers.length === 0) {
-                    container.innerHTML = ''; // Clear container
-                    emptyMessage.style.display = 'block';
-                    return;
-                }
-
-                emptyMessage.style.display = 'none';
-
-                container.innerHTML = selectedMembers.map((member, index) => `
-                                                                                                                                                                                    <div class="selected-member-item" 
-                                                                                                                                                                                        draggable="true" 
-                                                                                                                                                                                        data-id="${member.id}"
-                                                                                                                                                                                        data-index="${index}"
-                                                                                                                                                                                        ondragstart="dragStart(event)" 
-                                                                                                                                                                                        ondragover="dragOver(event)" 
-                                                                                                                                                                                        ondrop="drop(event)"
-                                                                                                                                                                                        ondragend="dragEnd(event)"
-                                                                                                                                                                                        style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--card-border); background: rgba(255,255,255,0.02); cursor: move; font-size: 0.85rem;">
-                                                                                                                                                                                        <i class="bi bi-grip-vertical" style="color: var(--text-muted); cursor: grab;"></i>
-                                                                                                                                                                                        <span style="flex: 1;">${member.number} - ${member.name} (${member.dept})</span>
-                                                                                                                                                                                        <button type="button" onclick="removeEmployeeFromSelected(${member.id})" 
-                                                                                                                                                                                            style="padding: 0.2rem 0.5rem; background: #dc3545; border: none; color: white; border-radius: 4px; cursor: pointer;">
-                                                                                                                                                                                            <i class="bi bi-arrow-left"></i> Remove
-                                                                                                                                                                                        </button>
-                                                                                                                                                                                    </div>
-                                                                                                                                                                                `).join('');
-            }
-
-            // Drag and Drop Functions
-            let draggedElement = null;
-
-            function dragStart(e) {
-                draggedElement = e.target;
-                e.target.style.opacity = '0.5';
-            }
-
-            function dragOver(e) {
-                e.preventDefault();
-                return false;
-            }
-
-            function drop(e) {
-                e.preventDefault();
-
-                if (!draggedElement) return;
-
-                const dropTarget = e.target.closest('.selected-member-item');
-                if (!dropTarget || dropTarget === draggedElement) return;
-
-                const draggedIndex = parseInt(draggedElement.dataset.index);
-                const targetIndex = parseInt(dropTarget.dataset.index);
-
-                // Reorder array
-                const draggedItem = selectedMembers[draggedIndex];
-                selectedMembers.splice(draggedIndex, 1);
-                selectedMembers.splice(targetIndex, 0, draggedItem);
-
-                // Update order values
-                selectedMembers.forEach((m, index) => {
-                    m.order = index;
-                });
-
-                renderSelectedMembers();
-                return false;
-            }
-
-            function dragEnd(e) {
-                e.target.style.opacity = '1';
-                draggedElement = null;
-            }
-
-            function filterAvailableEmployees() {
-                const searchTerm = document.getElementById('searchAvailableInput').value.toLowerCase();
-                document.querySelectorAll('.available-employee-item').forEach(item => {
-                    const name = item.dataset.name || '';
-                    const number = item.dataset.number || '';
-                    const isSelected = selectedMembers.find(m => m.id == item.dataset.id);
-
-                    if (isSelected) {
-                        item.style.display = 'none';
-                    } else if (name.includes(searchTerm) || number.includes(searchTerm)) {
-                        item.style.display = 'flex';
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-            }
-
-            // Update existing saveGroup function to use selectedMembers
-            window.saveGroup = async function () {
-                const groupName = document.getElementById('groupName').value.trim();
-
-                if (!groupName) {
-                    alert('Please enter a group name');
-                    return;
-                }
-
-                if (selectedMembers.length === 0) {
-                    alert('Please select at least one employee');
-                    return;
-                }
-
-                // Prepare employee IDs in order
-                const employeeIds = selectedMembers.map(m => m.id);
-
-                try {
-                    const url = currentEditingGroupId
-                        ? `/groups/${currentEditingGroupId}`
-                        : '/groups';
-                    const method = currentEditingGroupId ? 'PUT' : 'POST';
-
-                    const response = await fetch(url, {
-                        method: method,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            name: groupName,
-                            employee_ids: employeeIds
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        alert(data.message);
-                        await loadGroups();
-                        cancelGroupEdit();
-                        location.reload(); // Reload to update group selector
-                    } else {
-                        alert('Error: ' + (data.message || 'Failed to save group'));
-                    }
-                } catch (error) {
-                    console.error('Error saving group:', error);
-                    alert('Failed to save group');
-                }
-            };
-
-            // Update editGroup to populate selectedMembers
-            window.editGroup = function (groupId) {
-                // Find group in allGroups array
-                const group = allGroups.find(g => g.id === groupId);
-                if (!group) {
-                    alert('Group not found');
-                    return;
-                }
-
-                currentEditingGroupId = group.id;
-                document.getElementById('groupName').value = group.name;
-                document.getElementById('saveButtonText').textContent = 'Update';
-                document.getElementById('cancelButton').style.display = 'inline-block';
-
-                // Populate selected members in order
-                selectedMembers = group.employees.map((emp, index) => ({
-                    id: emp.id,
-                    number: emp.employee_number,
-                    name: emp.name,
-                    dept: emp.department || 'N/A',
-                    order: emp.pivot?.order ?? index
-                })).sort((a, b) => a.order - b.order);
-
-                renderSelectedMembers();
-                filterAvailableEmployees();
-
-                // Scroll to top
-                document.querySelector('.groups-modal-content').scrollTop = 0;
-            };
-
-            // Update cancelGroupEdit
-            window.cancelGroupEdit = function () {
-                currentEditingGroupId = null;
-                document.getElementById('groupName').value = '';
-                document.getElementById('saveButtonText').textContent = 'Create';
-                document.getElementById('cancelButton').style.display = 'none';
-                selectedMembers = [];
-                renderSelectedMembers();
-                filterAvailableEmployees();
-            };
-
-            function filterGroups() {
-                const searchTerm = document.getElementById('searchGroupInput').value.toLowerCase();
-                document.querySelectorAll('#groupsList > div').forEach(groupItem => {
-                    const groupName = groupItem.textContent.toLowerCase();
-                    if (groupName.includes(searchTerm)) {
-                        groupItem.style.display = 'block';
-                    } else {
-                        groupItem.style.display = 'none';
-                    }
-                });
-            }
-
-            // Quick Add Employee Functions
-            let pendingEntryIndex = null;
-
-            function openQuickAddEmployee(entryIndex) {
-                pendingEntryIndex = entryIndex;
-                document.getElementById('quickAddEmployeeModal').style.display = 'flex';
-                document.getElementById('newEmployeeName').focus();
-                // Hide suggestions
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!e.target.classList.contains('employee-search') && !e.target.closest('.employee-suggestions')) {
                 document.querySelectorAll('.employee-suggestions').forEach(el => {
                     el.style.display = 'none';
                 });
             }
+        });
 
-            function closeQuickAddEmployee() {
-                document.getElementById('quickAddEmployeeModal').style.display = 'none';
-                document.getElementById('quickAddEmployeeForm').reset();
-                pendingEntryIndex = null;
+        // Initialize with empty message
+        updateNoEntriesMessage();
+
+        // Form validation
+        document.getElementById('bulk-form').addEventListener('submit', function (e) {
+            const entries = document.querySelectorAll('.entry-row');
+            let valid = true;
+            let errorMsg = '';
+
+            if (entries.length === 0) {
+                e.preventDefault();
+                alert('Please add at least one entry');
+                return;
             }
 
-            // Handle Quick Add Employee form submission
-            document.getElementById('quickAddEmployeeForm').addEventListener('submit', async function (e) {
+            // Count entries with meals selected (entries without meals will be skipped by backend)
+            let entriesWithMeals = 0;
+            entries.forEach((entry, idx) => {
+                const employeeId = entry.querySelector('input[type="hidden"]').value;
+                const meals = entry.querySelectorAll('input[type="checkbox"]:checked');
+
+                if (!employeeId) {
+                    valid = false;
+                    errorMsg = `Entry ${idx + 1}: Please select an employee`;
+                } else if (meals.length > 0) {
+                    entriesWithMeals++;
+                }
+                // Entries with no meals are allowed - they will simply be skipped
+            });
+
+            if (!valid) {
                 e.preventDefault();
+                alert(errorMsg);
+            } else if (entriesWithMeals === 0) {
+                e.preventDefault();
+                alert('Please select at least one meal for at least one entry');
+            }
+        });
 
-                const employeeName = document.getElementById('newEmployeeName').value.trim();
-                const department = document.getElementById('newEmployeeDepartment').value;
-                const location = document.getElementById('newEmployeeLocation').value;
-                const employeeStatus = document.getElementById('newEmployeeStatus').value;
+        // File preview function
+        function previewFile() {
+            const fileInput = document.getElementById('absence_proof');
+            const preview = document.getElementById('file-preview');
+            const fileName = document.getElementById('file-name');
 
-                if (!employeeName) {
-                    alert('Please fill in Full Name');
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileName.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // Reorder groups based on selected location - matching groups go to top
+        function reorderGroups() {
+            const locationSelect = document.getElementById('location');
+            const groupSelector = document.getElementById('groupSelector');
+
+            if (!groupSelector || !locationSelect) return;
+
+            const selectedLocation = locationSelect.value.toLowerCase();
+            const options = Array.from(groupSelector.options);
+
+            // Separate into matching and non-matching groups
+            const defaultOption = options.find(opt => opt.value === '');
+            const matchingGroups = options.filter(opt => opt.value !== '' && opt.text.toLowerCase().includes(selectedLocation));
+            const otherGroups = options.filter(opt => opt.value !== '' && !opt.text.toLowerCase().includes(selectedLocation));
+
+            // Clear and re-add in new order
+            groupSelector.innerHTML = '';
+            if (defaultOption) groupSelector.appendChild(defaultOption);
+            matchingGroups.forEach(opt => groupSelector.appendChild(opt));
+            otherGroups.forEach(opt => groupSelector.appendChild(opt));
+        }
+
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            reorderGroups();
+        });
+
+        // Load Group function
+        function loadGroup() {
+            const selector = document.getElementById('groupSelector');
+            const selectedOption = selector.options[selector.selectedIndex];
+
+            if (!selectedOption.value) {
+                alert('Please select a group');
+                return;
+            }
+
+            const groupEmployees = JSON.parse(selectedOption.getAttribute('data-employees'));
+
+            if (groupEmployees.length === 0) {
+                alert('This group has no employees');
+                return;
+            }
+
+            if (groupEmployees.length > 200) {
+                alert('This group has too many employees (max 200)');
+                return;
+            }
+
+            // Clear existing entries
+            if (entryCount > 0) {
+                if (!confirm(`This will clear ${entryCount} existing entries. Continue?`)) {
                     return;
                 }
+                clearAll();
+            }
 
-                if (!location) {
-                    alert('Please select Homebase');
-                    return;
-                }
+            // Add entry for each employee with B, L, D auto-checked
+            groupEmployees.forEach((employee) => {
+                addEntry();
 
-                if (!employeeStatus) {
-                    alert('Please select Employee Status');
-                    return;
-                }
+                // Get the current entry number
+                const currentEntry = entryCount;
 
-                try {
-                    const response = await fetch('{{ route("employees.store") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            employee_number: '', // Auto-generate on backend
-                            name: employeeName,
-                            company: '',
-                            position: '',
-                            department: department,
-                            location: location,
-                            accommodation: '',
-                            active_status: 'active', // Always active for quick add
-                            employee_status: employeeStatus,
-                            quick_add: true
-                        })
-                    });
+                // Wait a tiny bit for DOM to update, then select employee
+                setTimeout(() => {
+                    // Set the hidden employee ID input
+                    const employeeIdInput = document.getElementById(`employee-id-${currentEntry}`);
+                    if (employeeIdInput) {
+                        employeeIdInput.value = employee.id;
+                    }
 
-                    const data = await response.json();
+                    // Hide search box and show selected employee
+                    const entryRow = document.getElementById(`entry-${currentEntry}`);
+                    if (entryRow) {
+                        const searchInput = entryRow.querySelector('.employee-search');
+                        const selectedDiv = document.getElementById(`selected-${currentEntry}`);
+                        const selectedNameSpan = document.getElementById(`selected-name-${currentEntry}`);
 
-                    if (response.ok && data.success) {
-                        // Add the new employee to the local employees array
-                        const newEmployee = data.employee;
-                        employees.push(newEmployee);
-
-                        // If there's a pending entry, select the new employee
-                        if (pendingEntryIndex !== null) {
-                            selectEmployee(
-                                pendingEntryIndex,
-                                newEmployee.id,
-                                newEmployee.employee_number,
-                                newEmployee.name,
-                                newEmployee.department || '',
-                                newEmployee.employee_status || ''
-                            );
+                        if (searchInput && selectedDiv && selectedNameSpan) {
+                            searchInput.style.display = 'none';
+                            selectedDiv.style.display = 'flex';
+                            selectedNameSpan.innerHTML = `${employee.employee_number} - <strong>${employee.name}</strong> <span style="color: var(--text-muted);">(${employee.department || 'N/A'} • ${employee.employee_status || 'N/A'})</span>`;
                         }
 
-                        // Close modal and reset
-                        closeQuickAddEmployee();
-                        alert('Employee "' + employeeName + '" added successfully!');
-                    } else {
-                        alert(data.message || 'Failed to add employee');
+                        // Do not auto-check any meals - leave them empty for user to select
                     }
-                } catch (error) {
-                    console.error('Error adding employee:', error);
-                    alert('Failed to add employee. Please try again.');
+                }, 10);
+            });
+
+            setTimeout(() => {
+                alert(`Loaded ${groupEmployees.length} employees from group "${selectedOption.text}"`);
+                selector.value = ''; // Reset selector
+            }, 100);
+        }
+
+        // Groups Modal Functions
+        let currentEditingGroupId = null;
+        let allGroups = [];
+
+        async function openGroupsModal() {
+            document.getElementById('groupsModal').style.display = 'flex';
+            await loadGroups();
+        }
+
+        function closeGroupsModal() {
+            document.getElementById('groupsModal').style.display = 'none';
+            cancelGroupEdit();
+        }
+
+        async function loadGroups() {
+            try {
+                const response = await fetch('{{ route("groups.index") }}');
+                allGroups = await response.json();
+                renderGroupsList();
+            } catch (error) {
+                console.error('Error loading groups:', error);
+                alert('Failed to load groups');
+            }
+        }
+
+        function renderGroupsList() {
+            const groupsList = document.getElementById('groupsList');
+            if (allGroups.length === 0) {
+                groupsList.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 2rem;">No groups created yet</p>';
+                return;
+            }
+
+            groupsList.innerHTML = allGroups.map(group => `
+                                                                                                                                                                                                                                <div style="padding: 1rem; border: 1px solid var(--card-border); border-radius: 8px; margin-bottom: 0.75rem; background: rgba(255,255,255,0.02);">
+                                                                                                                                                                                                                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                                                                                                                                                                                                        <div>
+                                                                                                                                                                                                                                            <strong style="color: var(--primary);">${group.name}</strong>
+                                                                                                                                                                                                                                            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0 0;">
+                                                                                                                                                                                                                                                ${group.employees.length} employees
+                                                                                                                                                                                                                                            </p>
+                                                                                                                                                                                                                                        </div>
+                                                                                                                                                                                                                                        <div style="display: flex; gap: 0.5rem;">
+                                                                                                                                                                                                                                            <button class="btn btn-secondary btn-sm" onclick="editGroup(${group.id})">
+                                                                                                                                                                                                                                                <i class="bi bi-pencil"></i> Edit
+                                                                                                                                                                                                                                            </button>
+                                                                                                                                                                                                                                            <button class="btn btn-danger btn-sm" onclick="deleteGroup(${group.id}, '${group.name}')">
+                                                                                                                                                                                                                                                <i class="bi bi-trash"></i> Delete
+                                                                                                                                                                                                                                            </button>
+                                                                                                                                                                                                                                        </div>
+                                                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                            `).join('');
+        }
+
+        async function saveGroup() {
+            const groupName = document.getElementById('groupName').value.trim();
+            const selectedEmployees = Array.from(document.querySelectorAll('.employee-checkbox:checked')).map(cb => cb.value);
+
+            if (!groupName) {
+                alert('Please enter a group name');
+                return;
+            }
+
+            if (selectedEmployees.length === 0) {
+                alert('Please select at least one employee');
+                return;
+            }
+
+            try {
+                const url = currentEditingGroupId
+                    ? `{{ url('/groups') }}/${currentEditingGroupId}`
+                    : '{{ route("groups.store") }}';
+
+                const method = currentEditingGroupId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: groupName,
+                        employee_ids: selectedEmployees
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    cancelGroupEdit();
+                    await loadGroups();
+                    // Refresh group selector dropdown
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to save group'));
+                }
+            } catch (error) {
+                console.error('Error saving group:', error);
+                alert('Failed to save group');
+            }
+        }
+
+        function editGroup(groupId) {
+            currentEditingGroupId = groupId;
+            const group = allGroups.find(g => g.id === groupId);
+
+            if (!group) return;
+
+            document.getElementById('groupName').value = group.name;
+            document.getElementById('saveButtonText').textContent = 'Update Group';
+            document.getElementById('cancelButton').style.display = 'inline-block';
+
+            // Check employees in this group
+            document.querySelectorAll('.employee-checkbox').forEach(cb => {
+                cb.checked = group.employees.some(emp => emp.id == cb.value);
+            });
+
+            // Scroll to top of modal
+            document.querySelector('.modal-content').scrollTop = 0;
+        }
+
+        async function deleteGroup(groupId, groupName) {
+            if (!confirm(`Are you sure you want to delete group "${groupName}"?`)) return;
+
+            try {
+                const response = await fetch(`{{ url('/groups') }}/${groupId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    await loadGroups();
+                    // Refresh group selector dropdown
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to delete group'));
+                }
+            } catch (error) {
+                console.error('Error deleting group:', error);
+                alert('Failed to delete group');
+            }
+        }
+
+        function cancelGroupEdit() {
+            currentEditingGroupId = null;
+            document.getElementById('groupName').value = '';
+            document.getElementById('saveButtonText').textContent = 'Create Group';
+            document.getElementById('cancelButton').style.display = 'none';
+            deselectAllEmployees();
+            updateSelectedCount();
+        }
+
+        function selectAllEmployees() {
+            document.querySelectorAll('.employee-checkbox-label').forEach(label => {
+                if (label.style.display !== 'none') {
+                    label.querySelector('.employee-checkbox').checked = true;
                 }
             });
-        </script>
+            updateSelectedCount();
+        }
+
+        function deselectAllEmployees() {
+            document.querySelectorAll('.employee-checkbox').forEach(cb => cb.checked = false);
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const count = document.querySelectorAll('.employee-checkbox:checked').length;
+            document.getElementById('selectedCount').textContent = count + ' selected';
+        }
+
+        function filterEmployees() {
+            const searchTerm = document.getElementById('searchEmployeeInput').value.toLowerCase();
+            document.querySelectorAll('.employee-checkbox-label').forEach(label => {
+                const name = label.getAttribute('data-name') || '';
+                const number = label.getAttribute('data-number') || '';
+                if (name.includes(searchTerm) || number.includes(searchTerm)) {
+                    label.style.display = 'block';
+                } else {
+                    label.style.display = 'none';
+                }
+            });
+        }
+
+        function filterGroups() {
+            const searchTerm = document.getElementById('searchGroupInput').value.toLowerCase();
+            document.querySelectorAll('#groupsList > div').forEach(groupItem => {
+                const groupName = groupItem.textContent.toLowerCase();
+                if (groupName.includes(searchTerm)) {
+                    groupItem.style.display = 'block';
+                } else {
+                    groupItem.style.display = 'none';
+                }
+            });
+        }
+
+        // New functions for redesigned modal
+        let selectedMembers = [];  // Array of {id, number, name, dept, order}
+
+        function addEmployeeToSelected(employeeId) {
+            // Check if already added
+            if (selectedMembers.find(m => m.id === employeeId)) {
+                return;
+            }
+
+            // Get employee data from available list
+            const employeeItem = document.querySelector(`.available-employee-item[data-id="${employeeId}"]`);
+            if (!employeeItem) return;
+
+            const employee = {
+                id: employeeId,
+                number: employeeItem.dataset.employeeNumber,
+                name: employeeItem.dataset.employeeName,
+                dept: employeeItem.dataset.employeeDept,
+                order: selectedMembers.length
+            };
+
+            selectedMembers.push(employee);
+            renderSelectedMembers();
+
+            // Hide from available list
+            employeeItem.style.display = 'none';
+        }
+
+        function removeEmployeeFromSelected(employeeId) {
+            selectedMembers = selectedMembers.filter(m => m.id !== employeeId);
+
+            // Reorder remaining members
+            selectedMembers.forEach((m, index) => {
+                m.order = index;
+            });
+
+            renderSelectedMembers();
+
+            // Show in available list
+            const employeeItem = document.querySelector(`.available-employee-item[data-id="${employeeId}"]`);
+            if (employeeItem) {
+                employeeItem.style.display = 'flex';
+            }
+
+            // Re-apply search filter
+            filterAvailableEmployees();
+        }
+
+        function renderSelectedMembers() {
+            const container = document.getElementById('selectedMembersList');
+            const emptyMessage = document.getElementById('emptySelectedMessage');
+            const countSpan = document.getElementById('selectedMembersCount');
+
+            countSpan.textContent = selectedMembers.length;
+
+            if (selectedMembers.length === 0) {
+                container.innerHTML = ''; // Clear container
+                emptyMessage.style.display = 'block';
+                return;
+            }
+
+            emptyMessage.style.display = 'none';
+
+            container.innerHTML = selectedMembers.map((member, index) => `
+                                                                                                                                                                                            <div class="selected-member-item" 
+                                                                                                                                                                                                draggable="true" 
+                                                                                                                                                                                                data-id="${member.id}"
+                                                                                                                                                                                                data-index="${index}"
+                                                                                                                                                                                                ondragstart="dragStart(event)" 
+                                                                                                                                                                                                ondragover="dragOver(event)" 
+                                                                                                                                                                                                ondrop="drop(event)"
+                                                                                                                                                                                                ondragend="dragEnd(event)"
+                                                                                                                                                                                                style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--card-border); background: rgba(255,255,255,0.02); cursor: move; font-size: 0.85rem;">
+                                                                                                                                                                                                <i class="bi bi-grip-vertical" style="color: var(--text-muted); cursor: grab;"></i>
+                                                                                                                                                                                                <span style="flex: 1;">${member.number} - ${member.name} (${member.dept})</span>
+                                                                                                                                                                                                <button type="button" onclick="removeEmployeeFromSelected(${member.id})" 
+                                                                                                                                                                                                    style="padding: 0.2rem 0.5rem; background: #dc3545; border: none; color: white; border-radius: 4px; cursor: pointer;">
+                                                                                                                                                                                                    <i class="bi bi-arrow-left"></i> Remove
+                                                                                                                                                                                                </button>
+                                                                                                                                                                                            </div>
+                                                                                                                                                                                        `).join('');
+        }
+
+        // Drag and Drop Functions
+        let draggedElement = null;
+
+        function dragStart(e) {
+            draggedElement = e.target;
+            e.target.style.opacity = '0.5';
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+            return false;
+        }
+
+        function drop(e) {
+            e.preventDefault();
+
+            if (!draggedElement) return;
+
+            const dropTarget = e.target.closest('.selected-member-item');
+            if (!dropTarget || dropTarget === draggedElement) return;
+
+            const draggedIndex = parseInt(draggedElement.dataset.index);
+            const targetIndex = parseInt(dropTarget.dataset.index);
+
+            // Reorder array
+            const draggedItem = selectedMembers[draggedIndex];
+            selectedMembers.splice(draggedIndex, 1);
+            selectedMembers.splice(targetIndex, 0, draggedItem);
+
+            // Update order values
+            selectedMembers.forEach((m, index) => {
+                m.order = index;
+            });
+
+            renderSelectedMembers();
+            return false;
+        }
+
+        function dragEnd(e) {
+            e.target.style.opacity = '1';
+            draggedElement = null;
+        }
+
+        function filterAvailableEmployees() {
+            const searchTerm = document.getElementById('searchAvailableInput').value.toLowerCase();
+            document.querySelectorAll('.available-employee-item').forEach(item => {
+                const name = item.dataset.name || '';
+                const number = item.dataset.number || '';
+                const isSelected = selectedMembers.find(m => m.id == item.dataset.id);
+
+                if (isSelected) {
+                    item.style.display = 'none';
+                } else if (name.includes(searchTerm) || number.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Update existing saveGroup function to use selectedMembers
+        window.saveGroup = async function () {
+            const groupName = document.getElementById('groupName').value.trim();
+
+            if (!groupName) {
+                alert('Please enter a group name');
+                return;
+            }
+
+            if (selectedMembers.length === 0) {
+                alert('Please select at least one employee');
+                return;
+            }
+
+            // Prepare employee IDs in order
+            const employeeIds = selectedMembers.map(m => m.id);
+
+            try {
+                const url = currentEditingGroupId
+                    ? `/groups/${currentEditingGroupId}`
+                    : '/groups';
+                const method = currentEditingGroupId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        name: groupName,
+                        employee_ids: employeeIds
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    await loadGroups();
+                    cancelGroupEdit();
+                    location.reload(); // Reload to update group selector
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to save group'));
+                }
+            } catch (error) {
+                console.error('Error saving group:', error);
+                alert('Failed to save group');
+            }
+        };
+
+        // Update editGroup to populate selectedMembers
+        window.editGroup = function (groupId) {
+            // Find group in allGroups array
+            const group = allGroups.find(g => g.id === groupId);
+            if (!group) {
+                alert('Group not found');
+                return;
+            }
+
+            currentEditingGroupId = group.id;
+            document.getElementById('groupName').value = group.name;
+            document.getElementById('saveButtonText').textContent = 'Update';
+            document.getElementById('cancelButton').style.display = 'inline-block';
+
+            // Populate selected members in order
+            selectedMembers = group.employees.map((emp, index) => ({
+                id: emp.id,
+                number: emp.employee_number,
+                name: emp.name,
+                dept: emp.department || 'N/A',
+                order: emp.pivot?.order ?? index
+            })).sort((a, b) => a.order - b.order);
+
+            renderSelectedMembers();
+            filterAvailableEmployees();
+
+            // Scroll to top
+            document.querySelector('.groups-modal-content').scrollTop = 0;
+        };
+
+        // Update cancelGroupEdit
+        window.cancelGroupEdit = function () {
+            currentEditingGroupId = null;
+            document.getElementById('groupName').value = '';
+            document.getElementById('saveButtonText').textContent = 'Create';
+            document.getElementById('cancelButton').style.display = 'none';
+            selectedMembers = [];
+            renderSelectedMembers();
+            filterAvailableEmployees();
+        };
+
+        function filterGroups() {
+            const searchTerm = document.getElementById('searchGroupInput').value.toLowerCase();
+            document.querySelectorAll('#groupsList > div').forEach(groupItem => {
+                const groupName = groupItem.textContent.toLowerCase();
+                if (groupName.includes(searchTerm)) {
+                    groupItem.style.display = 'block';
+                } else {
+                    groupItem.style.display = 'none';
+                }
+            });
+        }
+
+        // Quick Add Employee Functions
+        let pendingEntryIndex = null;
+
+        function openQuickAddEmployee(entryIndex) {
+            pendingEntryIndex = entryIndex;
+            document.getElementById('quickAddEmployeeModal').style.display = 'flex';
+            document.getElementById('newEmployeeName').focus();
+            // Hide suggestions
+            document.querySelectorAll('.employee-suggestions').forEach(el => {
+                el.style.display = 'none';
+            });
+        }
+
+        function closeQuickAddEmployee() {
+            document.getElementById('quickAddEmployeeModal').style.display = 'none';
+            document.getElementById('quickAddEmployeeForm').reset();
+            pendingEntryIndex = null;
+        }
+
+        // Handle Quick Add Employee form submission
+        document.getElementById('quickAddEmployeeForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const employeeName = document.getElementById('newEmployeeName').value.trim();
+            const department = document.getElementById('newEmployeeDepartment').value;
+            const location = document.getElementById('newEmployeeLocation').value;
+            const employeeStatus = document.getElementById('newEmployeeStatus').value;
+
+            if (!employeeName) {
+                alert('Please fill in Full Name');
+                return;
+            }
+
+            if (!location) {
+                alert('Please select Homebase');
+                return;
+            }
+
+            if (!employeeStatus) {
+                alert('Please select Employee Status');
+                return;
+            }
+
+            try {
+                const response = await fetch('{{ route("employees.store") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        employee_number: '', // Auto-generate on backend
+                        name: employeeName,
+                        company: '',
+                        position: '',
+                        department: department,
+                        location: location,
+                        accommodation: '',
+                        active_status: 'active', // Always active for quick add
+                        employee_status: employeeStatus,
+                        quick_add: true
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Add the new employee to the local employees array
+                    const newEmployee = data.employee;
+                    employees.push(newEmployee);
+
+                    // If there's a pending entry, select the new employee
+                    if (pendingEntryIndex !== null) {
+                        selectEmployee(
+                            pendingEntryIndex,
+                            newEmployee.id,
+                            newEmployee.employee_number,
+                            newEmployee.name,
+                            newEmployee.department || '',
+                            newEmployee.employee_status || ''
+                        );
+                    }
+
+                    // Close modal and reset
+                    closeQuickAddEmployee();
+                    alert('Employee "' + employeeName + '" added successfully!');
+                } else {
+                    alert(data.message || 'Failed to add employee');
+                }
+            } catch (error) {
+                console.error('Error adding employee:', error);
+                alert('Failed to add employee. Please try again.');
+            }
+        });
+    </script>
 @endpush

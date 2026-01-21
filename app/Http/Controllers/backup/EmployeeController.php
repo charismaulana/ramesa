@@ -347,4 +347,156 @@ class EmployeeController extends Controller
 
         return response()->json($employees);
     }
+
+    // Show export POB form
+    public function exportPobForm()
+    {
+        $locations = ['Ramba', 'Bentayan', 'Mangunjaya', 'Keluang'];
+        return view('employees.export-pob', compact('locations'));
+    }
+
+    // Export POB Schedule to Excel
+    public function exportPob(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|date_format:Y-m',
+            'location' => 'nullable|string',
+        ]);
+
+        $month = \Carbon\Carbon::parse($request->month . '-01');
+        $daysInMonth = $month->daysInMonth;
+        $location = $request->location;
+
+        // Get attendance data for the month (filtered by eating location)
+        $attendanceQuery = \App\Models\Attendance::whereBetween('scanned_at', [
+            $month->copy()->startOfMonth(),
+            $month->copy()->endOfMonth()
+        ]);
+
+        if ($location) {
+            $attendanceQuery->where('location', $location);
+        }
+
+        $attendances = $attendanceQuery->get()
+            ->groupBy('employee_id')
+            ->map(function ($records) {
+                return $records->groupBy(function ($item) {
+                    return $item->scanned_at->format('Y-m-d');
+                })->keys()->toArray();
+            });
+
+        // Get only employees who have attendance in this period (filtered by eating location)
+        $employeeIds = $attendances->keys()->toArray();
+        $employees = Employee::whereIn('id', $employeeIds)
+            ->orderBy('department')
+            ->orderBy('name')
+            ->get();
+
+        // Create spreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Title
+        $title = 'POB Schedule - ' . $month->format('F Y');
+        if ($location)
+            $title .= ' (' . $location . ')';
+        $sheet->setCellValue('A1', $title);
+        $sheet->mergeCells('A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(7 + $daysInMonth) . '1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+        // Headers - added Accommodation column
+        $headers = ['No', 'Employee ID', 'Name', 'Department', 'Location', 'Accommodation', 'Status'];
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $headers[] = sprintf('%02d', $d);
+        }
+
+        $col = 1;
+        foreach ($headers as $header) {
+            $sheet->setCellValueByColumnAndRow($col, 2, $header);
+            $col++;
+        }
+
+        // Style headers
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '008080']],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ];
+        $sheet->getStyle('A2:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(7 + $daysInMonth) . '2')->applyFromArray($headerStyle);
+
+        // Data rows
+        $row = 3;
+        $totals = array_fill(1, $daysInMonth, 0);
+
+        foreach ($employees as $index => $employee) {
+            $empAttendances = $attendances->get($employee->id, []);
+
+            $sheet->setCellValueByColumnAndRow(1, $row, $index + 1);
+            $sheet->setCellValueByColumnAndRow(2, $row, $employee->employee_number);
+            $sheet->setCellValueByColumnAndRow(3, $row, $employee->name);
+            $sheet->setCellValueByColumnAndRow(4, $row, $employee->department);
+            $sheet->setCellValueByColumnAndRow(5, $row, $employee->location);
+
+            // Handle accommodation - can be null or array
+            $accommodation = $employee->accommodation;
+            if (is_array($accommodation)) {
+                $accommodation = implode(', ', $accommodation);
+            }
+            $sheet->setCellValueByColumnAndRow(6, $row, $accommodation ?? '-');
+
+            $sheet->setCellValueByColumnAndRow(7, $row, $employee->employee_status);
+
+            for ($d = 1; $d <= $daysInMonth; $d++) {
+                $dateStr = $month->copy()->day($d)->format('Y-m-d');
+                $hasAttendance = in_array($dateStr, $empAttendances);
+
+                $col = 7 + $d;
+                if ($hasAttendance) {
+                    $sheet->setCellValueByColumnAndRow($col, $row, 1);
+                    $sheet->getStyleByColumnAndRow($col, $row)->getFill()
+                        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()->setRGB('00FF00');
+                    $totals[$d]++;
+                } else {
+                    $sheet->setCellValueByColumnAndRow($col, $row, '');
+                }
+            }
+
+            $row++;
+        }
+
+        // Grand Total row
+        $sheet->setCellValue('A' . $row, '');
+        $sheet->setCellValue('B' . $row, '');
+        $sheet->setCellValue('C' . $row, 'GRAND TOTAL');
+        $sheet->getStyle('C' . $row)->getFont()->setBold(true);
+        $sheet->mergeCells('C' . $row . ':G' . $row);
+        $sheet->getStyle('A' . $row . ':' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(7 + $daysInMonth) . $row)
+            ->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('000000');
+        $sheet->getStyle('A' . $row . ':' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(7 + $daysInMonth) . $row)
+            ->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFFFF'));
+
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $sheet->setCellValueByColumnAndRow(7 + $d, $row, $totals[$d]);
+        }
+
+        // Auto-size columns
+        for ($i = 1; $i <= 7; $i++) {
+            $sheet->getColumnDimensionByColumn($i)->setAutoSize(true);
+        }
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $sheet->getColumnDimensionByColumn(7 + $d)->setWidth(4);
+        }
+
+        // Download
+        $filename = 'POB_Schedule_' . $month->format('Y-m') . ($location ? '_' . $location : '') . '.xlsx';
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
 }

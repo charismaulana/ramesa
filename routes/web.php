@@ -74,6 +74,7 @@ Route::middleware(['auth', 'role'])->group(function () {
 
         // Employee routes - specific routes MUST come before resource route
         Route::post('/employees/merge-records', [EmployeeController::class, 'mergeRecords'])->name('employees.mergeRecords');
+        Route::post('/employees/check-merge-duplicates', [EmployeeController::class, 'checkMergeDuplicates'])->name('employees.checkMergeDuplicates');
         Route::get('/employees/merge-options', [EmployeeController::class, 'getMergeOptions'])->name('employees.mergeOptions');
         Route::get('/employees/export-pob', [EmployeeController::class, 'exportPobForm'])->name('employees.exportPobForm');
         Route::post('/employees/export-pob', [EmployeeController::class, 'exportPob'])->name('employees.exportPob');
