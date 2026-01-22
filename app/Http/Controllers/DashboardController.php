@@ -82,6 +82,19 @@ class DashboardController extends Controller
         ];
         $estimatedInvoice['total'] = array_sum($estimatedInvoice);
 
+        // Invoice per location
+        $invoiceByLocation = [];
+        foreach ($locations as $location) {
+            $invoiceByLocation[$location] = [
+                'breakfast' => $statsByLocation[$location]['breakfast'] * $mealPrices->breakfast_price,
+                'lunch' => $statsByLocation[$location]['lunch'] * $mealPrices->lunch_price,
+                'dinner' => $statsByLocation[$location]['dinner'] * $mealPrices->dinner_price,
+                'supper' => $statsByLocation[$location]['supper'] * $mealPrices->supper_price,
+                'snack' => $statsByLocation[$location]['snack'] * $mealPrices->snack_price,
+            ];
+            $invoiceByLocation[$location]['total'] = array_sum($invoiceByLocation[$location]);
+        }
+
         // Calendar data - get dates with attendance per location for current month
         $calendarMonth = $request->get('calendar_month', Carbon::now()->format('Y-m'));
         $calendarStart = Carbon::parse($calendarMonth . '-01')->startOfMonth();
@@ -119,6 +132,63 @@ class DashboardController extends Controller
             }
         }
 
+        // Breakdown by date and employee status (single location filter)
+        $employeeStatuses = ['Pekerja', 'TA & TKJP', 'Contractor', 'Visitor'];
+        $breakdownLocation = $request->get('breakdown_location', $locations[0]);
+        $statsByDate = [];
+        $dailyTotals = [];
+
+        // Generate date range
+        $currentDate = Carbon::parse($dateFrom);
+        $endDate = Carbon::parse($dateTo);
+        $dates = [];
+        while ($currentDate <= $endDate) {
+            $dates[] = $currentDate->format('Y-m-d');
+            $currentDate->addDay();
+        }
+
+        foreach ($dates as $date) {
+            $statsByDate[$date] = [];
+            $dailyTotals[$date] = ['breakfast' => 0, 'lunch' => 0, 'dinner' => 0, 'supper' => 0, 'snack' => 0, 'total' => 0];
+
+            foreach ($employeeStatuses as $status) {
+                // Map status to actual employee_status values
+                if ($status === 'TA & TKJP') {
+                    $statusCondition = function ($q) {
+                        $q->where('employees.employee_status', 'TA')
+                            ->orWhere('employees.employee_status', 'TKJP');
+                    };
+                } else {
+                    $statusCondition = function ($q) use ($status) {
+                        $q->where('employees.employee_status', $status);
+                    };
+                }
+
+                // Join with employees table to get employee_status
+                $baseQuery = Attendance::join('employees', 'attendances.employee_id', '=', 'employees.id')
+                    ->whereDate('attendances.scanned_at', $date)
+                    ->where('attendances.location', $breakdownLocation)
+                    ->where($statusCondition);
+
+                $statsByDate[$date][$status] = [
+                    'breakfast' => (clone $baseQuery)->where('attendances.meal_type', 'breakfast')->count(),
+                    'lunch' => (clone $baseQuery)->where('attendances.meal_type', 'lunch')->count(),
+                    'dinner' => (clone $baseQuery)->where('attendances.meal_type', 'dinner')->count(),
+                    'supper' => (clone $baseQuery)->where('attendances.meal_type', 'supper')->count(),
+                    'snack' => (clone $baseQuery)->where('attendances.meal_type', 'snack')->count(),
+                ];
+                $statsByDate[$date][$status]['total'] = array_sum($statsByDate[$date][$status]);
+
+                // Add to daily totals
+                foreach (['breakfast', 'lunch', 'dinner', 'supper', 'snack', 'total'] as $meal) {
+                    $dailyTotals[$date][$meal] += $statsByDate[$date][$status][$meal];
+                }
+            }
+        }
+
+
+
+
         return view('dashboard.index', compact(
             'statsByLocation',
             'totalStats',
@@ -132,11 +202,17 @@ class DashboardController extends Controller
             'activeEmployees',
             'mealPrices',
             'estimatedInvoice',
+            'invoiceByLocation',
             'calendarData',
             'calendarMonth',
             'calendarStart',
             'calendarEnd',
-            'lockedDates'
+            'lockedDates',
+            'statsByDate',
+            'dailyTotals',
+            'dates',
+            'employeeStatuses',
+            'breakdownLocation'
         ));
     }
 

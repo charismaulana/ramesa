@@ -8,38 +8,6 @@
         </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon"><i class="bi bi-calendar-day"></i></div>
-            <div class="stat-info">
-                <div class="stat-value">{{ $todayTotal }}</div>
-                <div class="stat-label">Today</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="bi bi-calendar-minus"></i></div>
-            <div class="stat-info">
-                <div class="stat-value">{{ $yesterdayTotal }}</div>
-                <div class="stat-label">Yesterday</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="bi bi-calendar-week"></i></div>
-            <div class="stat-info">
-                <div class="stat-value">{{ $thisWeekTotal }}</div>
-                <div class="stat-label">This Week</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon"><i class="bi bi-people"></i></div>
-            <div class="stat-info">
-                <div class="stat-value">{{ $activeEmployees }}</div>
-                <div class="stat-label">Active Employees</div>
-            </div>
-        </div>
-    </div>
-
     <!-- Attendance Calendar by Location -->
     <div class="card">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">

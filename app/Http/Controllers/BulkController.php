@@ -241,5 +241,63 @@ class BulkController extends Controller
             ->with('success', $message)
             ->with('skipped_records', $skippedRecords);
     }
+
+    /**
+     * Get upload status for each employee group
+     */
+    public function getGroupStatus(Request $request)
+    {
+        $date = $request->get('date');
+        $location = $request->get('location');
+
+        if (!$date || !$location) {
+            return response()->json(['error' => 'Date and location required'], 400);
+        }
+
+        // Filter groups by location prefix (e.g., "Ramba-Pekerja-1" for location "Ramba")
+        $groups = EmployeeGroup::with('employees:id,name')
+            ->where('name', 'like', $location . '-%')
+            ->get();
+        $result = [];
+
+        foreach ($groups as $group) {
+            $employeeIds = $group->employees->pluck('id')->toArray();
+
+            if (empty($employeeIds)) {
+                $result[] = [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'total_employees' => 0,
+                    'uploaded_count' => 0,
+                    'status' => 'empty',
+                ];
+                continue;
+            }
+
+            // Count unique employees that have any attendance for this date and location
+            $uploadedCount = Attendance::whereIn('employee_id', $employeeIds)
+                ->whereDate('scanned_at', $date)
+                ->where('location', $location)
+                ->distinct('employee_id')
+                ->count('employee_id');
+
+            $status = 'not_uploaded';
+            if ($uploadedCount === count($employeeIds)) {
+                $status = 'complete';
+            } elseif ($uploadedCount > 0) {
+                $status = 'partial';
+            }
+
+            $result[] = [
+                'id' => $group->id,
+                'name' => $group->name,
+                'total_employees' => count($employeeIds),
+                'uploaded_count' => $uploadedCount,
+                'status' => $status,
+            ];
+        }
+
+        return response()->json($result);
+    }
 }
 
