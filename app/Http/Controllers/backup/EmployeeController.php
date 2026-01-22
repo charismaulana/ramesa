@@ -293,6 +293,59 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Check for duplicate records before merging
+     */
+    public function checkMergeDuplicates(Request $request)
+    {
+        $validated = $request->validate([
+            'source_id' => 'required|exists:employees,id',
+            'target_id' => 'required|exists:employees,id|different:source_id',
+        ]);
+
+        $sourceEmployee = Employee::findOrFail($validated['source_id']);
+        $targetEmployee = Employee::findOrFail($validated['target_id']);
+
+        // Get source attendance records
+        $sourceRecords = \App\Models\Attendance::where('employee_id', $sourceEmployee->id)
+            ->select('id', 'scanned_at', 'meal_type', 'location')
+            ->get();
+
+        // Get target attendance records
+        $targetRecords = \App\Models\Attendance::where('employee_id', $targetEmployee->id)
+            ->select('id', 'scanned_at', 'meal_type', 'location')
+            ->get();
+
+        // Find duplicates (same date + same meal_type)
+        $duplicates = [];
+        foreach ($sourceRecords as $source) {
+            $sourceDate = \Carbon\Carbon::parse($source->scanned_at)->format('Y-m-d');
+            foreach ($targetRecords as $target) {
+                $targetDate = \Carbon\Carbon::parse($target->scanned_at)->format('Y-m-d');
+                if ($sourceDate === $targetDate && $source->meal_type === $target->meal_type) {
+                    $duplicates[] = [
+                        'date' => $sourceDate,
+                        'meal_type' => $source->meal_type,
+                        'source_location' => $source->location,
+                        'target_location' => $target->location,
+                        'source_id' => $source->id,
+                        'target_id' => $target->id,
+                    ];
+                }
+            }
+        }
+
+        return response()->json([
+            'source_name' => $sourceEmployee->name,
+            'source_number' => $sourceEmployee->employee_number,
+            'target_name' => $targetEmployee->name,
+            'target_number' => $targetEmployee->employee_number,
+            'source_count' => $sourceRecords->count(),
+            'duplicates' => $duplicates,
+            'duplicate_count' => count($duplicates),
+        ]);
+    }
+
+    /**
      * Merge records from source employee to target employee
      */
     public function mergeRecords(Request $request)
@@ -301,28 +354,70 @@ class EmployeeController extends Controller
             'source_id' => 'required|exists:employees,id',
             'target_id' => 'required|exists:employees,id|different:source_id',
             'delete_source' => 'nullable|boolean',
+            'duplicate_action' => 'nullable|in:skip,overwrite',
         ]);
 
         $sourceEmployee = Employee::findOrFail($validated['source_id']);
         $targetEmployee = Employee::findOrFail($validated['target_id']);
 
         // Count records before transfer
-        $recordCount = \App\Models\Attendance::where('employee_id', $sourceEmployee->id)->count();
+        $sourceRecords = \App\Models\Attendance::where('employee_id', $sourceEmployee->id)->get();
+        $recordCount = $sourceRecords->count();
 
         if ($recordCount === 0) {
             return back()->with('error', 'Source employee has no meal records to transfer.');
         }
 
-        // Transfer all attendance records
-        \App\Models\Attendance::where('employee_id', $sourceEmployee->id)
-            ->update(['employee_id' => $targetEmployee->id]);
+        // Get target attendance for duplicate checking
+        $targetRecords = \App\Models\Attendance::where('employee_id', $targetEmployee->id)->get();
 
-        $message = "Successfully transferred {$recordCount} meal records from '{$sourceEmployee->name}' (#{$sourceEmployee->employee_number}) to '{$targetEmployee->name}' (#{$targetEmployee->employee_number}).";
+        $skippedCount = 0;
+        $overwrittenCount = 0;
+        $transferredCount = 0;
+
+        foreach ($sourceRecords as $source) {
+            $sourceDate = \Carbon\Carbon::parse($source->scanned_at)->format('Y-m-d');
+
+            // Check if duplicate exists in target
+            $duplicate = $targetRecords->first(function ($target) use ($sourceDate, $source) {
+                $targetDate = \Carbon\Carbon::parse($target->scanned_at)->format('Y-m-d');
+                return $sourceDate === $targetDate && $source->meal_type === $target->meal_type;
+            });
+
+            if ($duplicate) {
+                $action = $request->input('duplicate_action', 'skip');
+                if ($action === 'overwrite') {
+                    // Delete target duplicate, then transfer source
+                    \App\Models\Attendance::where('id', $duplicate->id)->delete();
+                    $source->update(['employee_id' => $targetEmployee->id]);
+                    $overwrittenCount++;
+                } else {
+                    // Skip - delete source record
+                    $source->delete();
+                    $skippedCount++;
+                }
+            } else {
+                // No duplicate, just transfer
+                $source->update(['employee_id' => $targetEmployee->id]);
+                $transferredCount++;
+            }
+        }
+
+        $message = "Transfer complete! ";
+        if ($transferredCount > 0) {
+            $message .= "{$transferredCount} records transferred. ";
+        }
+        if ($overwrittenCount > 0) {
+            $message .= "{$overwrittenCount} duplicates overwritten. ";
+        }
+        if ($skippedCount > 0) {
+            $message .= "{$skippedCount} duplicates skipped. ";
+        }
 
         // Optionally delete source employee
         if ($request->input('delete_source')) {
             $sourceEmployee->delete();
-            $message .= " Source employee has been deleted.";
+            $message .= "Source employee deleted.";
         }
 
         return redirect()->route('employees.index')->with('success', $message);

@@ -293,6 +293,130 @@
         @endif
     </div>
 
+    <!-- Attendance Stats Card -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="card-title">📊 Attendance Stats ({{ $currentMonthStart->format('F Y') }})</h2>
+            <form method="GET" action="{{ route('employees.index') }}" style="margin: 0;">
+                <select name="stats_month" class="form-control" style="width: auto; display: inline-block;"
+                    onchange="this.form.submit()">
+                    @for($i = 0; $i < 12; $i++)
+                        @php
+                            $month = now()->subMonths($i);
+                            $monthValue = $month->format('Y-m');
+                            $monthLabel = $month->format('F Y');
+                            $selected = request('stats_month', now()->format('Y-m')) == $monthValue;
+                        @endphp
+                        <option value="{{ $monthValue }}" {{ $selected ? 'selected' : '' }}>{{ $monthLabel }}</option>
+                    @endfor
+                </select>
+            </form>
+        </div>
+        <div class="row" style="padding: 1rem; gap: 1rem;">
+            <!-- High Attendance (>20 days) -->
+            <div class="col-6" style="flex: 1; min-width: 300px;">
+                <div
+                    style="background: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; border-radius: 8px; padding: 1rem;">
+                    <h4 style="margin: 0 0 0.75rem 0; color: #28a745; font-size: 0.95rem;">
+                        ✅ High Attendance (>20 days)
+                        <span class="badge badge-success">{{ $highAttendanceEmployees->count() }}</span>
+                    </h4>
+                    @if($highAttendanceEmployees->count() > 0)
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            <table style="width: 100%; font-size: 0.85rem;">
+                                <thead>
+                                    <tr style="background: rgba(40, 167, 69, 0.1);">
+                                        <th style="padding: 0.35rem;">Name</th>
+                                        <th style="padding: 0.35rem;">Department</th>
+                                        <th style="padding: 0.35rem;">Position</th>
+                                        <th style="padding: 0.35rem;">Status</th>
+                                        <th style="padding: 0.35rem; text-align: center;">Days</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($highAttendanceEmployees as $emp)
+                                        <tr>
+                                            <td style="padding: 0.35rem;">
+                                                <a href="{{ route('employees.show', $emp) }}"
+                                                    style="color: var(--text);">{{ $emp->name }}</a>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                                    {{ $emp->employee_number }}
+                                                </div>
+                                            </td>
+                                            <td style="padding: 0.35rem; color: var(--text-muted); font-size: 0.8rem;">
+                                                {{ $emp->department ?? '-' }}
+                                            </td>
+                                            <td style="padding: 0.35rem; color: var(--text-muted); font-size: 0.8rem;">
+                                                {{ $emp->position ?? '-' }}
+                                            </td>
+                                            <td style="padding: 0.35rem; font-size: 0.8rem;">{{ $emp->employee_status ?? '-' }}</td>
+                                            <td style="padding: 0.35rem; text-align: center;">
+                                                <strong style="color: #28a745;">{{ $emp->attendance_days }}</strong>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <p style="color: var(--text-muted); margin: 0; font-size: 0.85rem;">No employees with >20 attendance
+                            days</p>
+                    @endif
+                </div>
+            </div>
+
+            <!-- No Attendance -->
+            <div class="col-6" style="flex: 1; min-width: 300px;">
+                <div
+                    style="background: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; border-radius: 8px; padding: 1rem;">
+                    <h4 style="margin: 0 0 0.75rem 0; color: #dc3545; font-size: 0.95rem;">
+                        ❌ No Attendance This Month
+                        <span class="badge badge-danger">{{ $noAttendanceEmployees->count() }}</span>
+                    </h4>
+                    @if($noAttendanceEmployees->count() > 0)
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            <table style="width: 100%; font-size: 0.85rem;">
+                                <thead>
+                                    <tr style="background: rgba(220, 53, 69, 0.1);">
+                                        <th style="padding: 0.35rem;">Name</th>
+                                        <th style="padding: 0.35rem;">Department</th>
+                                        <th style="padding: 0.35rem;">Position</th>
+                                        <th style="padding: 0.35rem;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($noAttendanceEmployees as $emp)
+                                        <tr>
+                                            <td style="padding: 0.35rem;">
+                                                <a href="{{ route('employees.show', $emp) }}"
+                                                    style="color: var(--text);">{{ $emp->name }}</a>
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                                    {{ $emp->employee_number }}
+                                                </div>
+                                            </td>
+                                            <td style="padding: 0.35rem; color: var(--text-muted); font-size: 0.8rem;">
+                                                {{ $emp->department ?? '-' }}
+                                            </td>
+                                            <td style="padding: 0.35rem; color: var(--text-muted); font-size: 0.8rem;">
+                                                {{ $emp->position ?? '-' }}
+                                            </td>
+                                            <td style="padding: 0.35rem; font-size: 0.8rem;">{{ $emp->employee_status ?? '-' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <p style="color: var(--text-muted); margin: 0; font-size: 0.85rem;">All active employees have attendance
+                        </p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
     <!-- Merge Records Modal -->
     <div id="mergeModal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 500px;">
@@ -491,14 +615,14 @@
                             resultsDiv.innerHTML = '<div style="padding: 0.75rem; color: var(--text-muted);">No employees found</div>';
                         } else {
                             resultsDiv.innerHTML = employees.map(emp => `
-                                                                    <div class="search-result-item" onclick="selectTargetEmployee(${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${emp.department || ''}')"
-                                                                        style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--card-border); transition: background 0.2s;"
-                                                                        onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
-                                                                        <strong>${emp.name}</strong>
-                                                                        <span style="color: var(--text-muted); font-size: 0.85rem;">#${emp.employee_number}</span>
-                                                                        <span style="color: var(--accent); font-size: 0.75rem; margin-left: 0.5rem;">${emp.employee_status || ''}</span>
-                                                                    </div>
-                                                                `).join('');
+                                                                                    <div class="search-result-item" onclick="selectTargetEmployee(${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${emp.department || ''}')"
+                                                                                        style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--card-border); transition: background 0.2s;"
+                                                                                        onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+                                                                                        <strong>${emp.name}</strong>
+                                                                                        <span style="color: var(--text-muted); font-size: 0.85rem;">#${emp.employee_number}</span>
+                                                                                        <span style="color: var(--accent); font-size: 0.75rem; margin-left: 0.5rem;">${emp.employee_status || ''}</span>
+                                                                                    </div>
+                                                                                `).join('');
                         }
                         resultsDiv.style.display = 'block';
                     });
@@ -554,13 +678,13 @@
                     document.getElementById('duplicateCount').textContent = data.duplicate_count;
 
                     const listHtml = data.duplicates.map(d => `
-                            <tr>
-                                <td>${d.date}</td>
-                                <td>${d.meal_type}</td>
-                                <td>${d.source_location || '-'}</td>
-                                <td>${d.target_location || '-'}</td>
-                            </tr>
-                        `).join('');
+                                            <tr>
+                                                <td>${d.date}</td>
+                                                <td>${d.meal_type}</td>
+                                                <td>${d.source_location || '-'}</td>
+                                                <td>${d.target_location || '-'}</td>
+                                            </tr>
+                                        `).join('');
                     document.getElementById('duplicatesList').innerHTML = listHtml;
 
                     document.getElementById('duplicatesModal').style.display = 'flex';

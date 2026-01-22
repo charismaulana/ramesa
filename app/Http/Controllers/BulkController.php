@@ -24,7 +24,7 @@ class BulkController extends Controller
             ->select('absence_proof', 'location', \DB::raw('DATE(scanned_at) as proof_date'))
             ->groupBy('absence_proof', 'location', \DB::raw('DATE(scanned_at)'))
             ->orderBy('scanned_at', 'desc')
-            ->limit(50)
+            ->limit(150)
             ->get()
             ->map(function ($item) {
                 return [

@@ -350,8 +350,10 @@
                     This action cannot be undone!
                 </div>
 
+                <input type="hidden" name="duplicate_action" id="duplicate_action" value="skip">
+
                 <div class="d-flex gap-1">
-                    <button type="submit" class="btn btn-primary" id="mergeSubmitBtn" disabled>
+                    <button type="button" class="btn btn-primary" id="mergeSubmitBtn" disabled onclick="checkAndTransfer()">
                         <i class="bi bi-arrow-right-circle"></i> Transfer Records
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="closeMergeModal()">
@@ -359,6 +361,54 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Duplicates Modal -->
+    <div id="duplicatesModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Duplicate Records Found</h3>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeDuplicatesModal()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div style="padding: 1rem;">
+                <div class="alert"
+                    style="background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <strong><span id="duplicateCount">0</span> duplicate meals</strong> were found. These records exist for
+                    the same date and meal type in both employees.
+                </div>
+
+                <div
+                    style="max-height: 300px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 8px; margin-bottom: 1rem;">
+                    <table class="data-table" style="margin: 0;">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Meal</th>
+                                <th>Source Location</th>
+                                <th>Target Location</th>
+                            </tr>
+                        </thead>
+                        <tbody id="duplicatesList">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex gap-1" style="flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary" onclick="transferWithAction('skip')" style="flex: 1;">
+                        <i class="bi bi-skip-forward"></i> Skip Duplicates
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="transferWithAction('overwrite')"
+                        style="flex: 1;">
+                        <i class="bi bi-arrow-repeat"></i> Overwrite with Source
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeDuplicatesModal()" style="flex: 1;">
+                        Cancel
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -441,14 +491,14 @@
                             resultsDiv.innerHTML = '<div style="padding: 0.75rem; color: var(--text-muted);">No employees found</div>';
                         } else {
                             resultsDiv.innerHTML = employees.map(emp => `
-                                                            <div class="search-result-item" onclick="selectTargetEmployee(${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${emp.department || ''}')"
-                                                                style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--card-border); transition: background 0.2s;"
-                                                                onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
-                                                                <strong>${emp.name}</strong>
-                                                                <span style="color: var(--text-muted); font-size: 0.85rem;">#${emp.employee_number}</span>
-                                                                <span style="color: var(--accent); font-size: 0.75rem; margin-left: 0.5rem;">${emp.employee_status || ''}</span>
-                                                            </div>
-                                                        `).join('');
+                                                                    <div class="search-result-item" onclick="selectTargetEmployee(${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${emp.department || ''}')"
+                                                                        style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--card-border); transition: background 0.2s;"
+                                                                        onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+                                                                        <strong>${emp.name}</strong>
+                                                                        <span style="color: var(--text-muted); font-size: 0.85rem;">#${emp.employee_number}</span>
+                                                                        <span style="color: var(--accent); font-size: 0.75rem; margin-left: 0.5rem;">${emp.employee_status || ''}</span>
+                                                                    </div>
+                                                                `).join('');
                         }
                         resultsDiv.style.display = 'block';
                     });
@@ -473,9 +523,77 @@
             document.getElementById('mergeSubmitBtn').disabled = true;
         }
 
+        // Check for duplicates before transferring
+        async function checkAndTransfer() {
+            const sourceId = document.getElementById('merge_source_id').value;
+            const targetId = document.getElementById('merge_target_id').value;
+
+            if (!sourceId || !targetId) {
+                alert('Please select both source and target employees');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('mergeSubmitBtn').disabled = true;
+            document.getElementById('mergeSubmitBtn').innerHTML = '<i class="bi bi-hourglass-split"></i> Checking...';
+
+            try {
+                const response = await fetch('{{ route("employees.checkMergeDuplicates") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ source_id: sourceId, target_id: targetId })
+                });
+
+                const data = await response.json();
+
+                if (data.duplicate_count > 0) {
+                    // Show duplicates modal
+                    document.getElementById('duplicateCount').textContent = data.duplicate_count;
+
+                    const listHtml = data.duplicates.map(d => `
+                            <tr>
+                                <td>${d.date}</td>
+                                <td>${d.meal_type}</td>
+                                <td>${d.source_location || '-'}</td>
+                                <td>${d.target_location || '-'}</td>
+                            </tr>
+                        `).join('');
+                    document.getElementById('duplicatesList').innerHTML = listHtml;
+
+                    document.getElementById('duplicatesModal').style.display = 'flex';
+                } else {
+                    // No duplicates, submit directly
+                    document.getElementById('mergeForm').submit();
+                }
+            } catch (error) {
+                console.error('Error checking duplicates:', error);
+                alert('Error checking for duplicates. Please try again.');
+            } finally {
+                document.getElementById('mergeSubmitBtn').disabled = false;
+                document.getElementById('mergeSubmitBtn').innerHTML = '<i class="bi bi-arrow-right-circle"></i> Transfer Records';
+            }
+        }
+
+        function closeDuplicatesModal() {
+            document.getElementById('duplicatesModal').style.display = 'none';
+        }
+
+        function transferWithAction(action) {
+            document.getElementById('duplicate_action').value = action;
+            closeDuplicatesModal();
+            document.getElementById('mergeForm').submit();
+        }
+
         // Close modal on outside click
         document.getElementById('mergeModal').addEventListener('click', function (e) {
             if (e.target === this) closeMergeModal();
+        });
+
+        document.getElementById('duplicatesModal').addEventListener('click', function (e) {
+            if (e.target === this) closeDuplicatesModal();
         });
     </script>
 @endpush
