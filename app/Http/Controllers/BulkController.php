@@ -128,15 +128,37 @@ class BulkController extends Controller
                     ->first();
 
                 if (!$employee) {
-                    // Create visitor as temporary employee
-                    $employee = Employee::create([
-                        'employee_number' => 'VISITOR-' . time() . '-' . rand(100, 999),
-                        'name' => $visitorName,
-                        'department' => 'Visitor',
-                        'employee_status' => 'Visitor',
-                        'location' => $overrideLocation ?? 'Ramba',
-                        'active_status' => 'active',
-                    ]);
+                    // Create visitor as temporary employee with retry for unique employee_number
+                    $maxAttempts = 10;
+                    $attempt = 0;
+
+                    while ($attempt < $maxAttempts) {
+                        try {
+                            $employee = Employee::create([
+                                'employee_number' => $this->generateUniqueVisitorNumber(),
+                                'name' => $visitorName,
+                                'department' => 'Visitor',
+                                'employee_status' => 'Visitor',
+                                'location' => $overrideLocation ?? 'Ramba',
+                                'active_status' => 'active',
+                            ]);
+                            break; // Success, exit the loop
+                        } catch (\Illuminate\Database\QueryException $e) {
+                            // Check if it's a duplicate entry error
+                            if ($e->getCode() == 23000 && str_contains($e->getMessage(), 'employee_number_unique')) {
+                                $attempt++;
+                                if ($attempt >= $maxAttempts) {
+                                    // Max attempts reached, throw the error
+                                    throw $e;
+                                }
+                                // Wait a tiny bit before retry
+                                usleep(10000); // 10ms
+                                continue;
+                            }
+                            // If it's not a duplicate error, re-throw it
+                            throw $e;
+                        }
+                    }
                 }
                 $employeeId = $employee->id;
             } elseif (!empty($entry['employee_id'])) {
@@ -240,6 +262,19 @@ class BulkController extends Controller
         return redirect()->route('bulk.index')
             ->with('success', $message)
             ->with('skipped_records', $skippedRecords);
+    }
+
+    /**
+     * Generate a unique visitor employee number
+     * Format: VISITOR-{timestamp in microseconds}-{random 4-digit number}
+     */
+    private function generateUniqueVisitorNumber()
+    {
+        // Use microtime for better uniqueness and a larger random range
+        $microtime = (int) (microtime(true) * 1000); // millisecond precision
+        $random = rand(1000, 9999); // 4-digit random number
+
+        return "VISITOR-{$microtime}-{$random}";
     }
 
     /**

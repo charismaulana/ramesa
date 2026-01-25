@@ -57,10 +57,53 @@ class EmployeeController extends Controller
 
         $employees = $query->with('groups')->paginate(15)->withQueryString();
 
+
         $departments = Employee::distinct()->pluck('department')->filter();
         $locations = Employee::distinct()->pluck('location')->filter();
 
-        return view('employees.index', compact('employees', 'departments', 'locations', 'sortBy', 'sortDir'));
+        // Attendance stats for selected month (default to current month)
+        $selectedMonth = $request->input('stats_month', now()->format('Y-m'));
+        $currentMonthStart = \Carbon\Carbon::parse($selectedMonth . '-01')->startOfMonth();
+        $currentMonthEnd = \Carbon\Carbon::parse($selectedMonth . '-01')->endOfMonth();
+
+        // Employees with more than 20 attendance days this month
+        $highAttendanceEmployees = Employee::where('active_status', 'active')
+            ->whereHas('attendances', function ($q) use ($currentMonthStart, $currentMonthEnd) {
+                $q->whereDate('scanned_at', '>=', $currentMonthStart)
+                    ->whereDate('scanned_at', '<=', $currentMonthEnd);
+            }, '>=', 1)
+            ->withCount([
+                'attendances as attendance_days' => function ($q) use ($currentMonthStart, $currentMonthEnd) {
+                    $q->whereDate('scanned_at', '>=', $currentMonthStart)
+                        ->whereDate('scanned_at', '<=', $currentMonthEnd)
+                        ->select(\DB::raw('COUNT(DISTINCT DATE(scanned_at))'));
+                }
+            ])
+            ->get()
+            ->filter(fn($e) => $e->attendance_days > 20)
+            ->sortByDesc('attendance_days');
+
+        // Employees with no attendance this month
+        $noAttendanceEmployees = Employee::where('active_status', 'active')
+            ->whereDoesntHave('attendances', function ($q) use ($currentMonthStart, $currentMonthEnd) {
+                $q->whereDate('scanned_at', '>=', $currentMonthStart)
+                    ->whereDate('scanned_at', '<=', $currentMonthEnd);
+            })
+            ->orderBy('name')
+            ->get();
+
+
+        return view('employees.index', compact(
+            'employees',
+            'departments',
+            'locations',
+            'sortBy',
+            'sortDir',
+            'highAttendanceEmployees',
+            'noAttendanceEmployees',
+            'currentMonthStart',
+            'currentMonthEnd'
+        ));
     }
 
     public function create()
