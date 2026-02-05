@@ -637,4 +637,184 @@ class EmployeeController extends Controller
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
     }
+
+    /**
+     * Export Absensi Makan (Daily Meal Sheet) to Excel
+     * Separate sheets for each employee type: Pekerja, TA & TKJP, Contractor, Visitor
+     * Max 30 employees per sheet, with pagination
+     */
+    public function exportAbsensiMakan(Request $request)
+    {
+        $request->validate([
+            'location' => 'nullable|string',
+        ]);
+
+        $location = $request->location;
+        $maxPerSheet = 30;
+
+        // Define employee type groups
+        $employeeGroups = [
+            'Pekerja' => ['Pekerja'],
+            'TA & TKJP' => ['TA', 'TKJP'],
+            'Contractor' => ['Contractor'],
+            'Visitor' => ['Visitor'],
+        ];
+
+        // Create spreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+
+        $isFirstSheet = true;
+
+        foreach ($employeeGroups as $groupName => $statuses) {
+            // Get employees for this group
+            $query = Employee::whereIn('employee_status', $statuses)
+                ->where('active_status', 'active')
+                ->orderBy('name');
+
+            if ($location) {
+                $query->where('location', $location);
+            }
+
+            $employees = $query->get();
+
+            // Skip if no employees
+            if ($employees->count() === 0) {
+                continue;
+            }
+
+            // Chunk employees into groups of 30
+            $chunks = $employees->chunk($maxPerSheet);
+            $pageNumber = 1;
+
+            foreach ($chunks as $chunk) {
+                // Create or get sheet
+                if ($isFirstSheet) {
+                    $sheet = $spreadsheet->getActiveSheet();
+                    $isFirstSheet = false;
+                } else {
+                    $sheet = $spreadsheet->createSheet();
+                }
+
+                // Sheet name with page number if multiple pages
+                $sheetName = $groupName;
+                if ($chunks->count() > 1) {
+                    $sheetName .= ' ' . $pageNumber;
+                }
+                $sheet->setTitle($sheetName);
+
+                // Title row
+                $title = 'Absensi Makan - ' . $groupName;
+                if ($location) {
+                    $title .= ' (' . $location . ')';
+                }
+                if ($chunks->count() > 1) {
+                    $title .= ' - Halaman ' . $pageNumber;
+                }
+                $sheet->setCellValue('A1', $title);
+                $sheet->mergeCells('A1:H1');
+                $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+                $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+                // Date row
+                $sheet->setCellValue('A2', 'Tanggal: _______________');
+                $sheet->mergeCells('A2:H2');
+
+                // Headers - with separate meal columns
+                $headers = ['No', 'Nama', 'Departemen', 'Breakfast', 'Lunch', 'Dinner', 'Supper', 'Snack', 'Akomodasi'];
+                $col = 1;
+                foreach ($headers as $header) {
+                    $sheet->setCellValueByColumnAndRow($col, 4, $header);
+                    $col++;
+                }
+
+                // Style headers
+                $headerStyle = [
+                    'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                    'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FF4500']],
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                            'color' => ['rgb' => '000000'],
+                        ],
+                    ],
+                ];
+                $sheet->getStyle('A4:I4')->applyFromArray($headerStyle);
+
+                // Data rows
+                $row = 5;
+                $startIndex = ($pageNumber - 1) * $maxPerSheet;
+
+                foreach ($chunk as $index => $employee) {
+                    $sheet->setCellValueByColumnAndRow(1, $row, $startIndex + $index + 1);
+                    $sheet->setCellValueByColumnAndRow(2, $row, $employee->name);
+                    $sheet->setCellValueByColumnAndRow(3, $row, $employee->department ?? '-');
+                    $sheet->setCellValueByColumnAndRow(4, $row, ''); // Breakfast - empty
+                    $sheet->setCellValueByColumnAndRow(5, $row, ''); // Lunch - empty
+                    $sheet->setCellValueByColumnAndRow(6, $row, ''); // Dinner - empty
+                    $sheet->setCellValueByColumnAndRow(7, $row, ''); // Supper - empty
+                    $sheet->setCellValueByColumnAndRow(8, $row, ''); // Snack - empty
+
+                    // Handle accommodation
+                    $accommodation = $employee->accommodation;
+                    if (is_array($accommodation) && !empty($accommodation)) {
+                        $accParts = [];
+                        foreach ($accommodation as $loc => $room) {
+                            if (!empty($room)) {
+                                $accParts[] = strtoupper(substr($loc, 0, 1)) . ': ' . $room;
+                            }
+                        }
+                        $accommodation = implode(', ', $accParts);
+                    } else {
+                        $accommodation = '-';
+                    }
+                    $sheet->setCellValueByColumnAndRow(9, $row, $accommodation);
+
+                    // Apply border to data row
+                    $sheet->getStyle('A' . $row . ':I' . $row)->getBorders()->getAllBorders()
+                        ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+                    $row++;
+                }
+
+                // Total row
+                $sheet->setCellValue('A' . $row, '');
+                $sheet->setCellValue('B' . $row, 'Total: ' . $chunk->count() . ' orang');
+                $sheet->mergeCells('B' . $row . ':I' . $row);
+                $sheet->getStyle('B' . $row)->getFont()->setBold(true);
+
+                // Auto-size columns
+                $sheet->getColumnDimension('A')->setWidth(6);
+                $sheet->getColumnDimension('B')->setAutoSize(true);
+                $sheet->getColumnDimension('C')->setAutoSize(true);
+                $sheet->getColumnDimension('D')->setWidth(10); // Breakfast
+                $sheet->getColumnDimension('E')->setWidth(10); // Lunch
+                $sheet->getColumnDimension('F')->setWidth(10); // Dinner
+                $sheet->getColumnDimension('G')->setWidth(10); // Supper
+                $sheet->getColumnDimension('H')->setWidth(10); // Snack
+                $sheet->getColumnDimension('I')->setAutoSize(true); // Akomodasi
+
+                // Set column alignment - center for No and meal columns
+                $sheet->getStyle('A5:A' . ($row - 1))->getAlignment()
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('D5:H' . ($row - 1))->getAlignment()
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+                $pageNumber++;
+            }
+        }
+
+        // Set first sheet as active
+        $spreadsheet->setActiveSheetIndex(0);
+
+        // Download
+        $filename = 'Absensi_Makan_' . now()->format('Y-m-d') . ($location ? '_' . $location : '') . '.xlsx';
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
 }

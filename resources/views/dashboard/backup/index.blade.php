@@ -189,69 +189,161 @@
         </div>
     </div>
 
-    <!-- Estimated Invoice (Now after By Location) -->
+    <!-- Breakdown by Date and Employee Status -->
     <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">💰 Estimated Invoice
-                ({{ $dateFrom == $dateTo ? $dateFrom : $dateFrom . ' - ' . $dateTo }})</h2>
+        <div class="card-header"
+            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <h2 class="card-title">👥 Breakdown by Date & Employee Status</h2>
+            <form method="GET" style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="hidden" name="date_from" value="{{ $dateFrom }}">
+                <input type="hidden" name="date_to" value="{{ $dateTo }}">
+                <input type="hidden" name="calendar_month" value="{{ $calendarMonth }}">
+                <label style="font-size: 0.85rem;">Location:</label>
+                <select name="breakdown_location" class="form-control" style="width: auto; padding: 0.25rem 0.5rem;"
+                    onchange="this.form.submit()">
+                    @foreach($locations as $loc)
+                        <option value="{{ $loc }}" {{ $breakdownLocation == $loc ? 'selected' : '' }}>{{ $loc }}</option>
+                    @endforeach
+                </select>
+            </form>
         </div>
-        <div class="table-container">
-            <table>
-                <thead>
+        <div class="table-container" style="max-height: 600px; overflow-y: auto;">
+            <table class="data-table">
+                <thead style="position: sticky; top: 0; background: #1a1a2e; z-index: 1;">
                     <tr>
-                        <th>Meal Type</th>
-                        <th class="text-center">Quantity</th>
-                        <th class="text-right">Price/Unit</th>
-                        <th class="text-right">Subtotal</th>
+                        <th>DATE</th>
+                        <th>STATUS</th>
+                        <th class="text-center">🌅 B'FAST</th>
+                        <th class="text-center">☀️ LUNCH</th>
+                        <th class="text-center">🌙 DINNER</th>
+                        <th class="text-center">🌃 SUPPER</th>
+                        <th class="text-center">🍪 SNACK</th>
+                        <th class="text-center">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @foreach($dates as $date)
+                        @php $dateRowCount = count($employeeStatuses) + 1; @endphp
+                        @foreach($employeeStatuses as $statusIdx => $status)
+                            @php
+                                $stats = $statsByDate[$date][$status];
+                                $isFirstRow = $statusIdx === 0;
+                            @endphp
+                            <tr style="{{ $isFirstRow ? 'border-top: 2px solid var(--primary);' : '' }}">
+                                @if($isFirstRow)
+                                    <td rowspan="{{ $dateRowCount }}"
+                                        style="vertical-align: middle; background: rgba(255, 69, 0, 0.1);">
+                                        <strong>{{ \Carbon\Carbon::parse($date)->format('d M') }}</strong>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                            {{ \Carbon\Carbon::parse($date)->format('D') }}</div>
+                                    </td>
+                                @endif
+                                <td>{{ $status }}</td>
+                                <td class="text-center">{{ $stats['breakfast'] ?: '-' }}</td>
+                                <td class="text-center">{{ $stats['lunch'] ?: '-' }}</td>
+                                <td class="text-center">{{ $stats['dinner'] ?: '-' }}</td>
+                                <td class="text-center">{{ $stats['supper'] ?: '-' }}</td>
+                                <td class="text-center">{{ $stats['snack'] ?: '-' }}</td>
+                                <td class="text-center"><strong>{{ $stats['total'] ?: '-' }}</strong></td>
+                            </tr>
+                        @endforeach
+                        <!-- Daily Total Row -->
+                        <tr style="background: rgba(255, 165, 0, 0.15);">
+                            <td><strong>Daily Total</strong></td>
+                            <td class="text-center"><strong>{{ $dailyTotals[$date]['breakfast'] }}</strong></td>
+                            <td class="text-center"><strong>{{ $dailyTotals[$date]['lunch'] }}</strong></td>
+                            <td class="text-center"><strong>{{ $dailyTotals[$date]['dinner'] }}</strong></td>
+                            <td class="text-center"><strong>{{ $dailyTotals[$date]['supper'] }}</strong></td>
+                            <td class="text-center"><strong>{{ $dailyTotals[$date]['snack'] }}</strong></td>
+                            <td class="text-center"><strong
+                                    style="color: var(--accent);">{{ $dailyTotals[$date]['total'] }}</strong></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Estimated Invoice Per Location -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">💰 Estimated Invoice by Location
+                ({{ $dateFrom == $dateTo ? $dateFrom : $dateFrom . ' - ' . $dateTo }})</h2>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td>🌅 Breakfast</td>
-                        <td class="text-center">{{ number_format($totalStats['breakfast']) }}</td>
-                        <td class="text-right">Rp {{ number_format($mealPrices->breakfast_price, 0, ',', '.') }}</td>
-                        <td class="text-right" style="color: var(--accent);">Rp
-                            {{ number_format($estimatedInvoice['breakfast'], 0, ',', '.') }}
-                        </td>
+                        <th>LOCATION</th>
+                        <th class="text-center">🌅 B'FAST<div
+                                style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted);">Rp
+                                {{ number_format($mealPrices->breakfast_price, 0, ',', '.') }}/pax</div>
+                        </th>
+                        <th class="text-center">☀️ LUNCH<div
+                                style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted);">Rp
+                                {{ number_format($mealPrices->lunch_price, 0, ',', '.') }}/pax</div>
+                        </th>
+                        <th class="text-center">🌙 DINNER<div
+                                style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted);">Rp
+                                {{ number_format($mealPrices->dinner_price, 0, ',', '.') }}/pax</div>
+                        </th>
+                        <th class="text-center">🌃 SUPPER<div
+                                style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted);">Rp
+                                {{ number_format($mealPrices->supper_price, 0, ',', '.') }}/pax</div>
+                        </th>
+                        <th class="text-center">🍪 SNACK<div
+                                style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted);">Rp
+                                {{ number_format($mealPrices->snack_price, 0, ',', '.') }}/pax</div>
+                        </th>
+                        <th class="text-right">TOTAL</th>
                     </tr>
-                    <tr>
-                        <td>☀️ Lunch</td>
-                        <td class="text-center">{{ number_format($totalStats['lunch']) }}</td>
-                        <td class="text-right">Rp {{ number_format($mealPrices->lunch_price, 0, ',', '.') }}</td>
-                        <td class="text-right" style="color: var(--accent);">Rp
-                            {{ number_format($estimatedInvoice['lunch'], 0, ',', '.') }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>🌙 Dinner</td>
-                        <td class="text-center">{{ number_format($totalStats['dinner']) }}</td>
-                        <td class="text-right">Rp {{ number_format($mealPrices->dinner_price, 0, ',', '.') }}</td>
-                        <td class="text-right" style="color: var(--accent);">Rp
-                            {{ number_format($estimatedInvoice['dinner'], 0, ',', '.') }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>🌃 Supper</td>
-                        <td class="text-center">{{ number_format($totalStats['supper']) }}</td>
-                        <td class="text-right">Rp {{ number_format($mealPrices->supper_price, 0, ',', '.') }}</td>
-                        <td class="text-right" style="color: var(--accent);">Rp
-                            {{ number_format($estimatedInvoice['supper'], 0, ',', '.') }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>🍿 Snack</td>
-                        <td class="text-center">{{ number_format($totalStats['snack']) }}</td>
-                        <td class="text-right">Rp {{ number_format($mealPrices->snack_price, 0, ',', '.') }}</td>
-                        <td class="text-right" style="color: var(--accent);">Rp
-                            {{ number_format($estimatedInvoice['snack'], 0, ',', '.') }}
-                        </td>
-                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($locations as $location)
+                        <tr>
+                            <td><strong>{{ $location }}</strong></td>
+                            <td class="text-center">
+                                <div style="color: var(--accent);">Rp
+                                    {{ number_format($invoiceByLocation[$location]['breakfast'], 0, ',', '.') }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                    {{ $statsByLocation[$location]['breakfast'] }} pax</div>
+                            </td>
+                            <td class="text-center">
+                                <div style="color: var(--accent);">Rp
+                                    {{ number_format($invoiceByLocation[$location]['lunch'], 0, ',', '.') }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                    {{ $statsByLocation[$location]['lunch'] }} pax</div>
+                            </td>
+                            <td class="text-center">
+                                <div style="color: var(--accent);">Rp
+                                    {{ number_format($invoiceByLocation[$location]['dinner'], 0, ',', '.') }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                    {{ $statsByLocation[$location]['dinner'] }} pax</div>
+                            </td>
+                            <td class="text-center">
+                                <div style="color: var(--accent);">Rp
+                                    {{ number_format($invoiceByLocation[$location]['supper'], 0, ',', '.') }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                    {{ $statsByLocation[$location]['supper'] }} pax</div>
+                            </td>
+                            <td class="text-center">
+                                <div style="color: var(--accent);">Rp
+                                    {{ number_format($invoiceByLocation[$location]['snack'], 0, ',', '.') }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                    {{ $statsByLocation[$location]['snack'] }} pax</div>
+                            </td>
+                            <td class="text-right">
+                                <div style="color: #ffc107; font-weight: bold;">Rp
+                                    {{ number_format($invoiceByLocation[$location]['total'], 0, ',', '.') }}</div>
+                            </td>
+                        </tr>
+                    @endforeach
                 </tbody>
                 <tfoot>
                     <tr style="background: rgba(255, 69, 0, 0.1); font-weight: bold;">
-                        <td colspan="3">GRAND TOTAL</td>
-                        <td class="text-right" style="color: var(--primary); font-size: 1.2rem;">Rp
-                            {{ number_format($estimatedInvoice['total'], 0, ',', '.') }}
+                        <td colspan="6"><strong>GRAND TOTAL</strong></td>
+                        <td class="text-right" style="color: #ffc107; font-size: 1.2rem;">
+                            Rp {{ number_format($estimatedInvoice['total'], 0, ',', '.') }}
                         </td>
                     </tr>
                 </tfoot>
@@ -452,11 +544,11 @@
 
 @push('scripts')
     <script>
-        function changeCalendarMonth() {
-            const month = document.getElementById('calendarMonth').value;
-            const url = new URL(window.location.href);
-            url.searchParams.set('calendar_month', month);
-            window.location.href = url.toString();
-        }
-    </script>
+            fu        nction changeCalendarMonth() {
+                const month = document.getElementById('calendarMonth').value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('calendar_month', month);
+                window.location.href = url.toString();
+            }
+        </script>
 @endpush

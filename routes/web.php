@@ -35,6 +35,7 @@ Route::middleware(['auth', 'role'])->group(function () {
 
     // Dashboard & Historical - accessible by all authenticated users
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/attendance-details', [DashboardController::class, 'getAttendanceDetails'])->name('dashboard.attendanceDetails');
     Route::get('/historical', [HistoricalController::class, 'index'])->name('historical.index');
     Route::get('/rooms', [\App\Http\Controllers\RoomDashboardController::class, 'index'])->name('rooms.dashboard');
     Route::get('/rooms/manage', [\App\Http\Controllers\RoomDashboardController::class, 'manage'])->name('rooms.manage');
@@ -79,6 +80,7 @@ Route::middleware(['auth', 'role'])->group(function () {
         Route::get('/employees/merge-options', [EmployeeController::class, 'getMergeOptions'])->name('employees.mergeOptions');
         Route::get('/employees/export-pob', [EmployeeController::class, 'exportPobForm'])->name('employees.exportPobForm');
         Route::post('/employees/export-pob', [EmployeeController::class, 'exportPob'])->name('employees.exportPob');
+        Route::get('/employees/export-absensi-makan', [EmployeeController::class, 'exportAbsensiMakan'])->name('employees.exportAbsensiMakan');
         Route::resource('employees', EmployeeController::class);
         Route::get('/employees/{employee}/print-card', [EmployeeController::class, 'printCard'])->name('employees.printCard');
         Route::get('/employees/{employee}/download-card', [EmployeeController::class, 'downloadCard'])->name('employees.downloadCard');

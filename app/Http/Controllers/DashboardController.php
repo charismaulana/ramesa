@@ -14,9 +14,29 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Date filter - default from start of month to today
-        $dateFrom = $request->get('date_from', Carbon::now()->startOfMonth()->toDateString());
-        $dateTo = $request->get('date_to', Carbon::today()->toDateString());
+        // Calendar month filter - if set, use it to determine date range
+        $calendarMonth = $request->get('calendar_month', Carbon::now()->format('Y-m'));
+        $calendarMonthStart = Carbon::parse($calendarMonth . '-01')->startOfMonth();
+        $calendarMonthEnd = $calendarMonthStart->copy()->endOfMonth();
+
+        // Date filter - if calendar_month is explicitly set and date_from/date_to are not,
+        // use the calendar month range for the date filter
+        $hasExplicitDateFilter = $request->has('date_from') || $request->has('date_to');
+
+        if (!$hasExplicitDateFilter && $request->has('calendar_month')) {
+            // User explicitly selected a calendar month, sync date filter with it
+            $dateFrom = $calendarMonthStart->toDateString();
+            // If the selected month is the current month, only go up to today
+            if ($calendarMonth === Carbon::now()->format('Y-m')) {
+                $dateTo = Carbon::today()->toDateString();
+            } else {
+                $dateTo = $calendarMonthEnd->toDateString();
+            }
+        } else {
+            // Use the default or explicit date range
+            $dateFrom = $request->get('date_from', Carbon::now()->startOfMonth()->toDateString());
+            $dateTo = $request->get('date_to', Carbon::today()->toDateString());
+        }
 
         // Get locations from employees
         // Stats by location
@@ -96,9 +116,9 @@ class DashboardController extends Controller
         }
 
         // Calendar data - get dates with attendance per location for current month
-        $calendarMonth = $request->get('calendar_month', Carbon::now()->format('Y-m'));
-        $calendarStart = Carbon::parse($calendarMonth . '-01')->startOfMonth();
-        $calendarEnd = $calendarStart->copy()->endOfMonth();
+        // Note: $calendarMonth, $calendarMonthStart, $calendarMonthEnd are already computed above
+        $calendarStart = $calendarMonthStart->copy();
+        $calendarEnd = $calendarMonthEnd->copy();
 
         $calendarData = [];
         foreach ($locations as $location) {
@@ -230,6 +250,62 @@ class DashboardController extends Controller
         $mealPrices->update($validated);
 
         return back()->with('success', 'Meal prices updated successfully');
+    }
+
+    /**
+     * Get attendance details for a specific date, location, status, and meal type
+     */
+    public function getAttendanceDetails(Request $request)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'location' => 'required|string',
+            'status' => 'required|string',
+            'meal_type' => 'required|in:breakfast,lunch,dinner,supper,snack',
+        ]);
+
+        $date = $validated['date'];
+        $location = $validated['location'];
+        $status = $validated['status'];
+        $mealType = $validated['meal_type'];
+
+        // Map status to actual employee_status values
+        if ($status === 'TA & TKJP') {
+            $statusCondition = function ($q) {
+                $q->where('employees.employee_status', 'TA')
+                    ->orWhere('employees.employee_status', 'TKJP');
+            };
+        } else {
+            $statusCondition = function ($q) use ($status) {
+                $q->where('employees.employee_status', $status);
+            };
+        }
+
+        // Query attendances with employee details
+        $attendances = Attendance::join('employees', 'attendances.employee_id', '=', 'employees.id')
+            ->whereDate('attendances.scanned_at', $date)
+            ->where('attendances.location', $location)
+            ->where('attendances.meal_type', $mealType)
+            ->where($statusCondition)
+            ->select(
+                'employees.name',
+                'employees.department',
+                'attendances.recorded_by'
+            )
+            ->orderBy('employees.name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $attendances,
+            'count' => $attendances->count(),
+            'filters' => [
+                'date' => Carbon::parse($date)->format('d M Y'),
+                'location' => $location,
+                'status' => $status,
+                'meal_type' => ucfirst($mealType),
+            ]
+        ]);
     }
 }
 

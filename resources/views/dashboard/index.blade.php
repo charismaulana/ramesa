@@ -77,7 +77,7 @@
                                 if ($isLocked)
                                     $tooltip .= ' (🔒 Locked)';
                             @endphp
-                            <a href="{{ route('dashboard', ['date_from' => $dateStr, 'date_to' => $dateStr]) }}"
+                            <a href="{{ route('dashboard', ['date_from' => $dateStr, 'date_to' => $dateStr, 'calendar_month' => $calendarMonth]) }}"
                                 style="aspect-ratio: 1; background: {{ $bgColor }}; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; text-decoration: none; color: inherit; {{ $isToday ? 'border: 1px solid var(--primary);' : '' }}"
                                 title="{{ $tooltip }}">
                                 {{ $day }}
@@ -116,6 +116,7 @@
             <h2 class="card-title">Filter by Date</h2>
         </div>
         <form action="{{ route('dashboard') }}" method="GET" class="filter-bar">
+            <input type="hidden" name="calendar_month" value="{{ $calendarMonth }}">
             <div class="form-group">
                 <label class="form-label">From</label>
                 <input type="date" name="date_from" class="form-control" value="{{ $dateFrom }}">
@@ -235,15 +236,36 @@
                                         style="vertical-align: middle; background: rgba(255, 69, 0, 0.1);">
                                         <strong>{{ \Carbon\Carbon::parse($date)->format('d M') }}</strong>
                                         <div style="font-size: 0.7rem; color: var(--text-muted);">
-                                            {{ \Carbon\Carbon::parse($date)->format('D') }}</div>
+                                            {{ \Carbon\Carbon::parse($date)->format('D') }}
+                                        </div>
                                     </td>
                                 @endif
                                 <td>{{ $status }}</td>
-                                <td class="text-center">{{ $stats['breakfast'] ?: '-' }}</td>
-                                <td class="text-center">{{ $stats['lunch'] ?: '-' }}</td>
-                                <td class="text-center">{{ $stats['dinner'] ?: '-' }}</td>
-                                <td class="text-center">{{ $stats['supper'] ?: '-' }}</td>
-                                <td class="text-center">{{ $stats['snack'] ?: '-' }}</td>
+                                <td class="text-center meal-count-cell" data-date="{{ $date }}"
+                                    data-location="{{ $breakdownLocation }}" data-status="{{ $status }}" data-meal="breakfast"
+                                    style="{{ $stats['breakfast'] ? 'cursor: pointer;' : '' }}"
+                                    onclick="{{ $stats['breakfast'] ? 'showAttendanceDetails(this)' : '' }}">
+                                    {{ $stats['breakfast'] ?: '-' }}</td>
+                                <td class="text-center meal-count-cell" data-date="{{ $date }}"
+                                    data-location="{{ $breakdownLocation }}" data-status="{{ $status }}" data-meal="lunch"
+                                    style="{{ $stats['lunch'] ? 'cursor: pointer;' : '' }}"
+                                    onclick="{{ $stats['lunch'] ? 'showAttendanceDetails(this)' : '' }}">
+                                    {{ $stats['lunch'] ?: '-' }}</td>
+                                <td class="text-center meal-count-cell" data-date="{{ $date }}"
+                                    data-location="{{ $breakdownLocation }}" data-status="{{ $status }}" data-meal="dinner"
+                                    style="{{ $stats['dinner'] ? 'cursor: pointer;' : '' }}"
+                                    onclick="{{ $stats['dinner'] ? 'showAttendanceDetails(this)' : '' }}">
+                                    {{ $stats['dinner'] ?: '-' }}</td>
+                                <td class="text-center meal-count-cell" data-date="{{ $date }}"
+                                    data-location="{{ $breakdownLocation }}" data-status="{{ $status }}" data-meal="supper"
+                                    style="{{ $stats['supper'] ? 'cursor: pointer;' : '' }}"
+                                    onclick="{{ $stats['supper'] ? 'showAttendanceDetails(this)' : '' }}">
+                                    {{ $stats['supper'] ?: '-' }}</td>
+                                <td class="text-center meal-count-cell" data-date="{{ $date }}"
+                                    data-location="{{ $breakdownLocation }}" data-status="{{ $status }}" data-meal="snack"
+                                    style="{{ $stats['snack'] ? 'cursor: pointer;' : '' }}"
+                                    onclick="{{ $stats['snack'] ? 'showAttendanceDetails(this)' : '' }}">
+                                    {{ $stats['snack'] ?: '-' }}</td>
                                 <td class="text-center"><strong>{{ $stats['total'] ?: '-' }}</strong></td>
                             </tr>
                         @endforeach
@@ -277,23 +299,28 @@
                         <th>LOCATION</th>
                         <th class="text-center">🌅 B'FAST<div
                                 style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted);">Rp
-                                {{ number_format($mealPrices->breakfast_price, 0, ',', '.') }}/pax</div>
+                                {{ number_format($mealPrices->breakfast_price, 0, ',', '.') }}/pax
+                            </div>
                         </th>
                         <th class="text-center">☀️ LUNCH<div
                                 style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted);">Rp
-                                {{ number_format($mealPrices->lunch_price, 0, ',', '.') }}/pax</div>
+                                {{ number_format($mealPrices->lunch_price, 0, ',', '.') }}/pax
+                            </div>
                         </th>
                         <th class="text-center">🌙 DINNER<div
                                 style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted);">Rp
-                                {{ number_format($mealPrices->dinner_price, 0, ',', '.') }}/pax</div>
+                                {{ number_format($mealPrices->dinner_price, 0, ',', '.') }}/pax
+                            </div>
                         </th>
                         <th class="text-center">🌃 SUPPER<div
                                 style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted);">Rp
-                                {{ number_format($mealPrices->supper_price, 0, ',', '.') }}/pax</div>
+                                {{ number_format($mealPrices->supper_price, 0, ',', '.') }}/pax
+                            </div>
                         </th>
                         <th class="text-center">🍪 SNACK<div
                                 style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted);">Rp
-                                {{ number_format($mealPrices->snack_price, 0, ',', '.') }}/pax</div>
+                                {{ number_format($mealPrices->snack_price, 0, ',', '.') }}/pax
+                            </div>
                         </th>
                         <th class="text-right">TOTAL</th>
                     </tr>
@@ -304,37 +331,48 @@
                             <td><strong>{{ $location }}</strong></td>
                             <td class="text-center">
                                 <div style="color: var(--accent);">Rp
-                                    {{ number_format($invoiceByLocation[$location]['breakfast'], 0, ',', '.') }}</div>
+                                    {{ number_format($invoiceByLocation[$location]['breakfast'], 0, ',', '.') }}
+                                </div>
                                 <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                    {{ $statsByLocation[$location]['breakfast'] }} pax</div>
+                                    {{ $statsByLocation[$location]['breakfast'] }} pax
+                                </div>
                             </td>
                             <td class="text-center">
                                 <div style="color: var(--accent);">Rp
-                                    {{ number_format($invoiceByLocation[$location]['lunch'], 0, ',', '.') }}</div>
+                                    {{ number_format($invoiceByLocation[$location]['lunch'], 0, ',', '.') }}
+                                </div>
                                 <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                    {{ $statsByLocation[$location]['lunch'] }} pax</div>
+                                    {{ $statsByLocation[$location]['lunch'] }} pax
+                                </div>
                             </td>
                             <td class="text-center">
                                 <div style="color: var(--accent);">Rp
-                                    {{ number_format($invoiceByLocation[$location]['dinner'], 0, ',', '.') }}</div>
+                                    {{ number_format($invoiceByLocation[$location]['dinner'], 0, ',', '.') }}
+                                </div>
                                 <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                    {{ $statsByLocation[$location]['dinner'] }} pax</div>
+                                    {{ $statsByLocation[$location]['dinner'] }} pax
+                                </div>
                             </td>
                             <td class="text-center">
                                 <div style="color: var(--accent);">Rp
-                                    {{ number_format($invoiceByLocation[$location]['supper'], 0, ',', '.') }}</div>
+                                    {{ number_format($invoiceByLocation[$location]['supper'], 0, ',', '.') }}
+                                </div>
                                 <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                    {{ $statsByLocation[$location]['supper'] }} pax</div>
+                                    {{ $statsByLocation[$location]['supper'] }} pax
+                                </div>
                             </td>
                             <td class="text-center">
                                 <div style="color: var(--accent);">Rp
-                                    {{ number_format($invoiceByLocation[$location]['snack'], 0, ',', '.') }}</div>
+                                    {{ number_format($invoiceByLocation[$location]['snack'], 0, ',', '.') }}
+                                </div>
                                 <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                    {{ $statsByLocation[$location]['snack'] }} pax</div>
+                                    {{ $statsByLocation[$location]['snack'] }} pax
+                                </div>
                             </td>
                             <td class="text-right">
                                 <div style="color: #ffc107; font-weight: bold;">Rp
-                                    {{ number_format($invoiceByLocation[$location]['total'], 0, ',', '.') }}</div>
+                                    {{ number_format($invoiceByLocation[$location]['total'], 0, ',', '.') }}
+                                </div>
                             </td>
                         </tr>
                     @endforeach
@@ -411,6 +449,58 @@
             <a href="{{ route('historical.index') }}" class="btn btn-secondary">
                 <i class="bi bi-clock-history"></i> View Historical
             </a>
+        </div>
+    </div>
+
+    <!-- Attendance Details Modal -->
+    <div id="attendanceModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center;">
+        <div
+            style="background: #1a1a2e; border: 1px solid var(--card-border); border-radius: 12px; max-width: 800px; width: 90%; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;">
+            <!-- Modal Header -->
+            <div
+                style="padding: 1.5rem; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0; color: var(--accent); font-size: 1.25rem;">📋 Attendance Details</h3>
+                    <p id="modalFilters" style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);"></p>
+                </div>
+                <button onclick="closeAttendanceModal()"
+                    style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0; width: 30px; height: 30px;">&times;</button>
+            </div>
+
+            <!-- Modal Body -->
+            <div id="modalBody" style="padding: 1.5rem; overflow-y: auto; flex: 1;">
+                <div id="loadingState" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <div style="font-size: 2rem;">⏳</div>
+                    <p>Loading attendance details...</p>
+                </div>
+
+                <div id="contentState" style="display: none;">
+                    <table class="data-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;">#</th>
+                                <th style="text-align: left;">Name</th>
+                                <th style="text-align: left;">Department</th>
+                                <th style="text-align: left;">Recorded By</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTableBody">
+                        </tbody>
+                    </table>
+                    <div id="emptyState"
+                        style="display: none; text-align: center; padding: 2rem; color: var(--text-muted);">
+                        <div style="font-size: 2rem;">📭</div>
+                        <p>No attendance records found</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--card-border); text-align: right;">
+                <span id="recordCount" style="color: var(--text-muted); margin-right: 1rem;"></span>
+                <button onclick="closeAttendanceModal()" class="btn btn-secondary btn-sm">Close</button>
+            </div>
         </div>
     </div>
 @endsection
@@ -544,11 +634,93 @@
 
 @push('scripts')
     <script>
-            fu        nction changeCalendarMonth() {
-                const month = document.getElementById('calendarMonth').value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('calendar_month', month);
-                window.location.href = url.toString();
+        function changeCalendarMonth() {
+            const month = document.getElementById('calendarMonth').value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('calendar_month', month);
+            // Remove date filter params so the controller will auto-sync date range to the selected month
+            url.searchParams.delete('date_from');
+            url.searchParams.delete('date_to');
+            window.location.href = url.toString();
+        }
+
+        function showAttendanceDetails(cell) {
+            const date = cell.dataset.date;
+            const location = cell.dataset.location;
+            const status = cell.dataset.status;
+            const mealType = cell.dataset.meal;
+
+            // Show modal
+            const modal = document.getElementById('attendanceModal');
+            modal.style.display = 'flex';
+
+            // Show loading state
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('contentState').style.display = 'none';
+
+            // Fetch attendance details
+            const url = new URL('{{ route('dashboard.attendanceDetails') }}');
+            url.searchParams.set('date', date);
+            url.searchParams.set('location', location);
+            url.searchParams.set('status', status);
+            url.searchParams.set('meal_type', mealType);
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('contentState').style.display = 'block';
+
+                    // Update modal filters
+                    document.getElementById('modalFilters').textContent =
+                        `${data.filters.date} • ${data.filters.location} • ${data.filters.status} • ${data.filters.meal_type}`;
+
+                    // Update record count
+                    document.getElementById('recordCount').textContent =
+                        `${data.count} record${data.count !== 1 ? 's' : ''}`;
+
+                    // Populate table
+                    const tbody = document.getElementById('attendanceTableBody');
+                    tbody.innerHTML = '';
+
+                    if (data.count > 0) {
+                        data.data.forEach((attendance, index) => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                    <td>${index + 1}</td>
+                                    <td><strong>${attendance.name}</strong></td>
+                                    <td>${attendance.department}</td>
+                                    <td>${attendance.recorded_by}</td>
+                                `;
+                            tbody.appendChild(row);
+                        });
+                        document.getElementById('emptyState').style.display = 'none';
+                    } else {
+                        document.getElementById('emptyState').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching attendance details:', error);
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('contentState').style.display = 'block';
+                    document.getElementById('emptyState').style.display = 'block';
+                    document.getElementById('emptyState').innerHTML = `
+                        < div style = "font-size: 2rem;" >⚠️</div >
+                            <p>Error loading attendance details</p>
+                    `;
+                });
+        }
+
+        function closeAttendanceModal() {
+            document.getElementById('attendanceModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('attendanceModal')?.addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeAttendanceModal();
             }
-        </script>
+        });
+    </script>
 @endpush

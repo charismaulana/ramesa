@@ -71,6 +71,7 @@ Route::middleware(['auth', 'role'])->group(function () {
         // Bulk input routes
         Route::get('/bulk', [BulkController::class, 'index'])->name('bulk.index');
         Route::post('/bulk', [BulkController::class, 'store'])->name('bulk.store');
+        Route::get('/bulk/group-status', [BulkController::class, 'getGroupStatus'])->name('bulk.groupStatus');
 
         // Employee routes - specific routes MUST come before resource route
         Route::post('/employees/merge-records', [EmployeeController::class, 'mergeRecords'])->name('employees.mergeRecords');

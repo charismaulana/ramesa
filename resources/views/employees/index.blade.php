@@ -7,6 +7,10 @@
             <p class="page-subtitle">Manage all employee records</p>
         </div>
         <div class="d-flex gap-1">
+            <a href="{{ route('employees.exportAbsensiMakan') }}" class="btn btn-secondary">
+                <i class="bi bi-file-earmark-excel"></i>
+                Absensi Makan
+            </a>
             <a href="{{ route('employees.exportPobForm') }}" class="btn btn-secondary">
                 <i class="bi bi-file-earmark-excel"></i>
                 Export POB
@@ -615,14 +619,14 @@
                             resultsDiv.innerHTML = '<div style="padding: 0.75rem; color: var(--text-muted);">No employees found</div>';
                         } else {
                             resultsDiv.innerHTML = employees.map(emp => `
-                                                                                    <div class="search-result-item" onclick="selectTargetEmployee(${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${emp.department || ''}')"
-                                                                                        style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--card-border); transition: background 0.2s;"
-                                                                                        onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
-                                                                                        <strong>${emp.name}</strong>
-                                                                                        <span style="color: var(--text-muted); font-size: 0.85rem;">#${emp.employee_number}</span>
-                                                                                        <span style="color: var(--accent); font-size: 0.75rem; margin-left: 0.5rem;">${emp.employee_status || ''}</span>
-                                                                                    </div>
-                                                                                `).join('');
+                                                                                        <div class="search-result-item" onclick="selectTargetEmployee(${emp.id}, '${emp.employee_number}', '${emp.name.replace(/'/g, "\\'")}', '${emp.department || ''}')"
+                                                                                            style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--card-border); transition: background 0.2s;"
+                                                                                            onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+                                                                                            <strong>${emp.name}</strong>
+                                                                                            <span style="color: var(--text-muted); font-size: 0.85rem;">#${emp.employee_number}</span>
+                                                                                            <span style="color: var(--accent); font-size: 0.75rem; margin-left: 0.5rem;">${emp.employee_status || ''}</span>
+                                                                                        </div>
+                                                                                    `).join('');
                         }
                         resultsDiv.style.display = 'block';
                     });
@@ -678,13 +682,13 @@
                     document.getElementById('duplicateCount').textContent = data.duplicate_count;
 
                     const listHtml = data.duplicates.map(d => `
-                                            <tr>
-                                                <td>${d.date}</td>
-                                                <td>${d.meal_type}</td>
-                                                <td>${d.source_location || '-'}</td>
-                                                <td>${d.target_location || '-'}</td>
-                                            </tr>
-                                        `).join('');
+                                                <tr>
+                                                    <td>${d.date}</td>
+                                                    <td>${d.meal_type}</td>
+                                                    <td>${d.source_location || '-'}</td>
+                                                    <td>${d.target_location || '-'}</td>
+                                                </tr>
+                                            `).join('');
                     document.getElementById('duplicatesList').innerHTML = listHtml;
 
                     document.getElementById('duplicatesModal').style.display = 'flex';
